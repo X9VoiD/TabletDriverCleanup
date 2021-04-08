@@ -1,3 +1,15 @@
+# Self-elevate the script if required
+if (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] 'Administrator'))
+{
+    if ([int](Get-CimInstance -Class Win32_OperatingSystem | Select-Object -ExpandProperty BuildNumber) -ge 6000)
+    {
+        $Location = (Get-Item $MyInvocation.MyCommand.Path).DirectoryName
+        $CommandLine = "-ExecutionPolicy Bypass -File `"" + $MyInvocation.MyCommand.Path + "`" "
+        Start-Process -FilePath PowerShell.exe -WorkingDirectory $Location -Verb Runas -ArgumentList $CommandLine
+        Exit
+    }
+}
+
 Write-Output "Huion/Gaomon Cleanup Script"
 
 $pnputil = & pnputil -e
@@ -65,7 +77,16 @@ if (($pnputil -match "Graphics Tablet") -and ($pnputil -match "04/10/2017"))
 
 if (-not $detected)
 {
+    Write-Output ""
+    Write-Output ""
     Write-Output "No Gaomon/Huion driver detected"
 }
+else
+{
+    Write-Output ""
+    Write-Output "Done"
+}
 
-Write-Output "Done."
+Write-Output ""
+Write-Output "Press any key to exit..."
+[System.Console]::ReadKey()
