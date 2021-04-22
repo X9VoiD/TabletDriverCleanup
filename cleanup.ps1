@@ -84,6 +84,8 @@ if (-not $detected)
 }
 else
 {
+    Write-Output "Installing default input drivers"
+    pnputil -i -a "$Env:SystemRoot\INF\input.inf"
     Write-Output ""
     Write-Output "Done"
 }
