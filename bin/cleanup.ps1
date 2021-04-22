@@ -12,6 +12,7 @@ if (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 
 Write-Output "Huion/Gaomon Cleanup Script"
 Set-Location ((Get-Item $MyInvocation.MyCommand.Path).DirectoryName)
+Set-Location ..
 
 $pnputil = & pnputil -e
 $detected = 0
