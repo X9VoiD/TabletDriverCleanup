@@ -1,2 +1,2 @@
 @echo off
-powershell -ExecutionPolicy Bypass -File ./cleanup.ps1
+powershell -ExecutionPolicy Bypass -File ./bin/cleanup.ps1
