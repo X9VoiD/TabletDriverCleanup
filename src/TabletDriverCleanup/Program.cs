@@ -12,6 +12,7 @@ public static partial class Program
 {
     public static bool NoDriverUninstall { get; set; }
     public static bool NoDeviceUninstall { get; set; }
+    public static bool NoWarning { get; set; }
     public static bool DryRun { get; set; }
     public static bool RebootNeeded { get; set; }
 
@@ -52,6 +53,9 @@ public static partial class Program
                 case "--no-device-uninstall":
                     NoDeviceUninstall = true;
                     break;
+                case "--yes" or "-y":
+                    NoWarning = true;
+                    break;
                 case "--dry-run":
                     DryRun = true;
                     break;
@@ -68,6 +72,14 @@ public static partial class Program
         if (DryRun)
             Console.WriteLine("Dry run, no changes will be made.");
 
+        if (!DryRun && !NoWarning)
+        {
+            Console.WriteLine("Make sure that all tablet drivers have been uninstalled via their official uninstallers.");
+            Console.WriteLine("Once done, press Enter to continue...");
+            Console.ReadKey();
+            Console.WriteLine();
+        }
+
         if (!NoDeviceUninstall)
             UninstallDevices();
 
@@ -77,15 +89,22 @@ public static partial class Program
 
         if (RebootNeeded)
         {
-            Console.WriteLine("\nReboot is required to complete the cleanup.");
-            Console.WriteLine("Press Enter to reboot now, or Ctrl+C to cancel.");
-            Console.ReadKey();
+            if (NoWarning)
+            {
+                Console.WriteLine("\nReboot is required to complete the cleanup.");
+                Console.WriteLine("Press Enter to reboot now, or Ctrl+C to cancel.");
+                Console.ReadKey();
+            }
             Process.Start("shutdown", "/r /t 0");
             Environment.Exit(0);
         }
 
-        Console.WriteLine("\nPress Enter to continue...");
-        Console.ReadKey();
+        if (!NoWarning)
+        {
+            Console.WriteLine("\nPress Enter to continue...");
+            Console.ReadKey();
+        }
+
         return 0;
     }
 
@@ -198,7 +217,7 @@ public static partial class Program
         }
 
         if (!found)
-            Console.WriteLine("No drivers to uninstall is found.");
+            Console.WriteLine("No drivers to uninstall.");
     }
 
     private static bool ShouldUninstall(PnpUtilDriver pnpUtilDriver, [NotNullWhen(true)] out DriverInfToUninstall? driverToUninstallInfo)
