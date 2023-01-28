@@ -17,6 +17,7 @@ public static partial class Program
 
     public static readonly ImmutableArray<DriverInfToUninstall> DriversToUninstall = ImmutableArray.Create(
         new DriverInfToUninstall("VMulti", @"vmulti\.inf", "Pentablet HID"),
+        new DriverInfToUninstall("VMulti", @"vmulti\.inf", "[H|h][U|u][I|i][O|o][N|n]"),
         new DriverInfToUninstall("WinUSB (Gaomon)", @"winusb\.inf", "Gaomon"),
         new DriverInfToUninstall("WinUSB (Wacom)", @"winusb\.inf", "Wacom"),
         new DriverInfToUninstall("WinUSB (Huion)", @"winusb\.inf", "Huion"),
