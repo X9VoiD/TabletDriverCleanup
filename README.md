@@ -3,6 +3,7 @@ A small tool that cleans up leftover drivers of various tablet drivers.
 
 ## Instructions
 
+- Download the `TabletDriverCleanup.exe` from the [latest release](https://github.com/X9VoiD/WinUSBCleanup/releases).
 - Run as administrator.
 
 ## Build Instructions
