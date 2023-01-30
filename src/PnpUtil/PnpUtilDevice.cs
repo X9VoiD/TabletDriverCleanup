@@ -115,8 +115,6 @@ public partial record PnpUtilDevice(
                 case "Problem Status":
                     problemStatus = value.Value;
                     break;
-                default:
-                    throw new InvalidOperationException($"Unknown property: {prop}");
             }
         }
 

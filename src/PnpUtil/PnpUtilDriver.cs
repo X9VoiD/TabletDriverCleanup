@@ -84,8 +84,6 @@ public record PnpUtilDriver(
                 case "Driver Status":
                     driverStatus = value.Value;
                     break;
-                default:
-                    throw new Exception($"Unknown property '{prop}'");
             }
         }
 
