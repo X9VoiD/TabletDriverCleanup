@@ -22,7 +22,8 @@ public static partial class Program
         new DriverInfToUninstall("WinUSB (Gaomon)", @"winusb\.inf", "Gaomon"),
         new DriverInfToUninstall("WinUSB (Wacom)", @"winusb\.inf", "Wacom"),
         new DriverInfToUninstall("WinUSB (Huion)", @"winusb\.inf", "Huion"),
-        new DriverInfToUninstall("WinUSB (libwdi 'Zadig')", @".*", "libwdi", "USBDevice")
+        new DriverInfToUninstall("WinUSB (libwdi)", @".*", "libwdi", "USBDevice"),
+        new DriverInfToUninstall("WinUSB (libwdi)", @".*", "libwdi", "Universal Serial Bus devices")
     );
 
     public static readonly ImmutableArray<DeviceToUninstall> DevicesToUninstall = ImmutableArray.Create(
