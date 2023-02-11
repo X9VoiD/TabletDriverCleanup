@@ -39,10 +39,12 @@ public class DeviceCleanupModule : ICleanupModule
         var devicesConfig = state.ConfigurationManager[DEVICE_CONFIG];
         _devicesToUninstall = JsonSerializer.Deserialize(devicesConfig, _serializerContext.ImmutableArrayDeviceToUninstall);
 
+        var found = false;
         foreach (var device in devices)
         {
             if (ShouldUninstall(device, out var deviceToUninstall))
             {
+                found = true;
                 if (state.Interactive && !state.DryRun)
                 {
                     var promptResult = ConsoleUtility.PromptYesNo($"Remove '{deviceToUninstall.FriendlyName}'?");
@@ -57,6 +59,9 @@ public class DeviceCleanupModule : ICleanupModule
                     RemoveDevice(state, device);
             }
         }
+
+        if (!found)
+            Console.WriteLine("No devices to remove is found.");
     }
 
     private bool ShouldUninstall(Device device, [NotNullWhen(true)] out DeviceToUninstall? deviceToUninstall)

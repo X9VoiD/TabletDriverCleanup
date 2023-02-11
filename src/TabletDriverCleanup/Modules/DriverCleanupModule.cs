@@ -37,10 +37,12 @@ public class DriverCleanupModule : ICleanupModule
         var driverConfig = state.ConfigurationManager[DRIVER_CONFIG];
         _driversToUninstall = JsonSerializer.Deserialize(driverConfig, _serializerContext.ImmutableArrayDriverToUninstall)!;
 
+        var found = false;
         foreach (var driver in drivers)
         {
             if (ShouldUninstall(driver, out var driverToUninstall))
             {
+                found = true;
                 if (state.Interactive && !state.DryRun)
                 {
                     var promptResult = ConsoleUtility.PromptYesNo($"Uninstall '{driverToUninstall.FriendlyName}'?");
@@ -55,6 +57,9 @@ public class DriverCleanupModule : ICleanupModule
                     UninstallDriver(state, driver);
             }
         }
+
+        if (!found)
+            Console.WriteLine("No drivers to uninstall is found.");
     }
 
     private bool ShouldUninstall(Driver driver, [NotNullWhen(true)] out DriverToUninstall? driverToUninstall)
