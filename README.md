@@ -8,6 +8,14 @@ A small tool that cleans up leftover drivers of various tablet drivers.
 - Extract the contents of the zip file.
 - Run as administrator.
 
+## Updating Identifiers
+
+TabletDriverCleanup makes use of "identifiers" to know what devices or drivers to uninstall. If there is no `config`
+directory/folder beside TabletDriverCleanup, it will attempt to download up-to-date identifiers from this repository.
+
+To update identifiers:
+- Delete `config` folder if it exists.
+
 ## Build Instructions
 
 For those who want to build the project from source:
