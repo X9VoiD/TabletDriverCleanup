@@ -46,16 +46,17 @@ public static partial class Program
             Console.WriteLine("Make sure that all tablet drivers have been uninstalled via their official uninstallers.");
             Console.WriteLine("Once done, press Enter to continue...");
             Console.ReadKey();
+            Console.WriteLine();
         }
 
         foreach (var module in modules.Where(m => m.Enabled))
         {
-            Console.WriteLine();
             Console.WriteLine($"Running '{module.Name}'...");
 
             try
             {
                 module.Run(state);
+                Console.WriteLine();
             }
             catch (Exception ex)
             {
