@@ -19,12 +19,36 @@ public class DriverCleanupModule : ICleanupModule
     );
 
     public static readonly ImmutableArray<DriverToUninstall> DriversToUninstall = ImmutableArray.Create(
-        new DriverToUninstall("VMulti", @"vmulti\.inf", "Pentablet HID"),
-        new DriverToUninstall("VMulti", @"vmulti\.inf", "[H|h][U|u][I|i][O|o][N|n]"),
-        new DriverToUninstall("WinUSB (Hawku/Huion)", @"tabletdriver\.inf", "Graphics Tablet"),
-        new DriverToUninstall("WinUSB (Gaomon)", @"winusb\.inf", "Gaomon"),
-        new DriverToUninstall("WinUSB (Huion)", @"winusb\.inf", "Huion"),
-        new DriverToUninstall("WinUSB (libwdi)", @".*", "libwdi", Guids.USBDevice)
+        new DriverToUninstall(
+            friendlyName: "VMulti",
+            originalName: @"vmulti\.inf",
+            providerName: "Pentablet HID",
+            classGuid: Guids.HIDClass),
+        new DriverToUninstall(
+            friendlyName: "VMulti",
+            originalName: @"vmulti\.inf",
+            providerName: "[H|h][U|u][I|i][O|o][N|n]",
+            classGuid: Guids.HIDClass),
+        new DriverToUninstall(
+            friendlyName: "WinUSB (Hawku/Huion)",
+            originalName: @"tabletdriver\.inf",
+            providerName: "Graphics Tablet",
+            classGuid: Guids.USBDevice),
+        new DriverToUninstall(
+            friendlyName: "WinUSB (Gaomon)",
+            originalName: @"winusb\.inf",
+            providerName: "Gaomon",
+            classGuid: Guids.USBDevice),
+        new DriverToUninstall(
+            friendlyName: "WinUSB (Huion)",
+            originalName: @"winusb\.inf",
+            providerName: "Huion",
+            classGuid: Guids.USBDevice),
+        new DriverToUninstall(
+            friendlyName: "WinUSB (libwdi)",
+            originalName: @".*",
+            providerName: "libwdi",
+            classGuid: Guids.USBDevice)
     );
 
     public string Name { get; } = "Driver Cleanup";
@@ -90,7 +114,7 @@ public class DriverCleanupModule : ICleanupModule
     {
         ImmutableArray<Driver> drivers = Enumerator.GetDrivers();
 
-        using FileStream stream = File.OpenWrite(Path.Join(state.CurrentPath, "drivers.json"));
+        using FileStream stream = File.Open(Path.Join(state.CurrentPath, "drivers.json"), FileMode.Create, FileAccess.Write);
         JsonSerializer.Serialize(stream, drivers, _serializerContext.ImmutableArrayDriver);
 
         Console.WriteLine($"Dumped {drivers.Length} drivers to 'drivers.json'");

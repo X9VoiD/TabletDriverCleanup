@@ -240,7 +240,7 @@ public static partial class Enumerator
     }
 
     [GeneratedRegex(@"^oem[0-9]+\.inf$")]
-    private static partial Regex InfRegex();
+    public static partial Regex InfRegex();
 
     private delegate T ParsePropertyDelegate<T>(ReadOnlySpan<byte> buffer);
     private delegate bool GenericGetterDelegate<TInput, TInput2, TInput3>(TInput input, in TInput2 input2, in TInput3 input3, nint buffer, uint bufferSize, out uint requiredSize);

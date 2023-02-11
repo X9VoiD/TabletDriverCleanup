@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using TabletDriverCleanup.Services;
 using static Vanara.PInvoke.NewDev;
 using static Vanara.PInvoke.SetupAPI;
@@ -29,7 +30,8 @@ public class DeviceCleanupModule : ICleanupModule
             friendlyName: "VMulti Device",
             deviceDescription: "Pentablet HID",
             manufacturerName: "Pentablet HID",
-            hardwareId: @"pentablet\\hid")
+            hardwareId: @"pentablet\\hid",
+            classGuid: Guids.HIDClass)
     );
 
     public string Name { get; } = "Device Cleanup";
@@ -107,9 +109,12 @@ public class DeviceCleanupModule : ICleanupModule
 
     public void Dump(ProgramState state)
     {
-        ImmutableArray<Device> devices = Enumerator.GetDevices();
+        Regex infRegex = Enumerator.InfRegex();
+        ImmutableArray<Device> devices = Enumerator.GetDevices()
+            .Where(device => infRegex.IsMatch(device.InfName ?? string.Empty))
+            .ToImmutableArray();
 
-        using FileStream stream = File.OpenWrite(Path.Join(state.CurrentPath, "devices.json"));
+        using FileStream stream = File.Open(Path.Join(state.CurrentPath, "devices.json"), FileMode.Create, FileAccess.Write);
         JsonSerializer.Serialize(stream, devices, _serializerContext.ImmutableArrayDevice);
 
         Console.WriteLine($"Dumped {devices.Length} devices to 'devices.json'");
