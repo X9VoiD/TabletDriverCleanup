@@ -1,4 +1,5 @@
 # TabletDriverCleanup
+
 A small tool that cleans up leftover drivers of various tablet drivers.
 
 ## Instructions
@@ -8,10 +9,10 @@ A small tool that cleans up leftover drivers of various tablet drivers.
 
 ## Build Instructions
 
-For people who want to build the tool themselves.
+For those who want to build the project from source:
 
 - Install .NET 7.0 SDK
 - Clone the repository
-- `dotnet publish .\src\TabletDriverCleanup\ /p:PublishSingleFile=true /p:PublishTrimmed=true /p:DebugType=embedded --configuration=Release --self-contained=true`
+- Run `build.ps1` in the root directory
 
-The executable would be in `src/TabletDriverCleanup/bin/Release/net7.0/win-x64/publish`.
+The binaries will be in `build`.
