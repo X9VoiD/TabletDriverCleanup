@@ -73,7 +73,7 @@ public class DeviceCleanupModule : ICleanupModule
         {
             if (deviceToUninstallCandidate.DeviceDescriptionRegex.NullableMatch(device.FriendlyName) &&
                 deviceToUninstallCandidate.ManufacturerNameRegex.NullableMatch(device.Manufacturer) &&
-                deviceToUninstallCandidate.HardwareIdRegex.NullableMatch(device.HardwareId) &&
+                deviceToUninstallCandidate.HardwareIdRegex.NullableMatch(device.HardwareIds) &&
                 (deviceToUninstallCandidate.ClassGuid is not Guid guid || guid == device.ClassGuid))
             {
                 deviceToUninstall = deviceToUninstallCandidate;

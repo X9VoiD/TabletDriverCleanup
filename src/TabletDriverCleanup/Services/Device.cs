@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Diagnostics;
 
 namespace TabletDriverCleanup.Services;
@@ -9,7 +10,7 @@ public class Device
 
     public bool IsGeneric { get; }
     public string InstanceId { get; }
-    public string HardwareId { get; }
+    public ImmutableArray<string> HardwareIds { get; }
     public string? Description { get; }
     public string? FriendlyName => _friendlyName ?? Description;
     public string? Manufacturer { get; }
@@ -25,7 +26,7 @@ public class Device
     public Device(
         bool isGeneric,
         string instanceId,
-        string hardwareId,
+        string? hardwareIds,
         string? description,
         string? friendlyName,
         string? manufacturer,
@@ -40,7 +41,8 @@ public class Device
     {
         IsGeneric = isGeneric;
         InstanceId = instanceId;
-        HardwareId = hardwareId;
+        HardwareIds = hardwareIds?.Split('\u0000', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToImmutableArray()
+            ?? ImmutableArray<string>.Empty;
         Description = description;
         _friendlyName = friendlyName;
         Manufacturer = manufacturer;
