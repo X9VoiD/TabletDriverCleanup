@@ -1,9 +1,0 @@
-namespace PnpUtil;
-
-public enum PnpUtilReturnCode
-{
-    SUCCESS = 0,
-    ERROR_NO_MORE_ITEMS = 259,
-    ERROR_SUCCESS_REBOOT_REQUIRED = 3010,
-    ERROR_SUCCESS_REBOOT_INITIATED = 1641,
-}
