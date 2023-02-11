@@ -165,6 +165,7 @@ public static partial class Program
             Console.WriteLine($"  --no-{module.CliName}\t\t{module.DisablementDescription}");
 
         Console.WriteLine("  --dry-run\t\t\tonly print the changes that would be made");
+        Console.WriteLine("  --dump\t\t\tdump some information about devices and drivers");
         Console.WriteLine("  --help\t\t\tshow this help message");
     }
 
