@@ -37,7 +37,7 @@ public static partial class Enumerator
 
             bool generic = GetDeviceProperty(deviceInfoSet, in deviceInfo, in DEVPKEY_Device_GenericDriverInstalled, ParseBool);
             string instanceId = GetDeviceInstanceId(deviceInfoSet, in deviceInfo);
-            string hardwareId = GetDeviceRegistryProperty(deviceInfoSet, in deviceInfo, SPDRP.SPDRP_HARDWAREID, ParseString)!;
+            string? hardwareIds = GetDeviceRegistryProperty(deviceInfoSet, in deviceInfo, SPDRP.SPDRP_HARDWAREID, ParseString);
             string? description = GetDeviceRegistryProperty(deviceInfoSet, in deviceInfo, SPDRP.SPDRP_DEVICEDESC, ParseString);
             string? friendlyName = GetDeviceRegistryProperty(deviceInfoSet, in deviceInfo, SPDRP.SPDRP_FRIENDLYNAME, ParseString);
             string? manufacturer = GetDeviceRegistryProperty(deviceInfoSet, in deviceInfo, SPDRP.SPDRP_MFG, ParseString);
@@ -52,7 +52,7 @@ public static partial class Enumerator
             Device device = new(
                 isGeneric: generic,
                 instanceId: instanceId,
-                hardwareId: hardwareId,
+                hardwareIds: hardwareIds,
                 description: description,
                 friendlyName: friendlyName,
                 manufacturer: manufacturer,
