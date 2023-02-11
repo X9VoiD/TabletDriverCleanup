@@ -11,6 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="../../config/**" />
     <PackageReference Include="Vanara.PInvoke.CfgMgr32" Version="3.4.13" />
     <PackageReference Include="Vanara.PInvoke.NewDev" Version="3.4.13" />
     <PackageReference Include="Vanara.PInvoke.SetupAPI" Version="3.4.13" />

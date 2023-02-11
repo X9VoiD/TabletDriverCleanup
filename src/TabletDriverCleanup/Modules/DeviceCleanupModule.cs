@@ -13,26 +13,18 @@ namespace TabletDriverCleanup.Modules;
 
 public class DeviceCleanupModule : ICleanupModule
 {
+    private const string DEVICE_CONFIG = "device_identifiers.json";
+
     private static readonly DeviceSerializerContext _serializerContext = new(
         new JsonSerializerOptions
         {
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-            WriteIndented = true
+            WriteIndented = true,
         }
     );
 
-    public static readonly ImmutableArray<DeviceToUninstall> DevicesToUninstall = ImmutableArray.Create(
-        new DeviceToUninstall(
-            friendlyName: "Wacom Driver Downloader",
-            deviceDescription: "Wacom Driver Downloader",
-            manufacturerName: "Wacom Technology"),
-        new DeviceToUninstall(
-            friendlyName: "VMulti Device",
-            deviceDescription: "Pentablet HID",
-            manufacturerName: "Pentablet HID",
-            hardwareId: @"pentablet\\hid",
-            classGuid: Guids.HIDClass)
-    );
+    private ImmutableArray<DeviceToUninstall> _devicesToUninstall;
+    private readonly RegexCache _regexCache = new();
 
     public string Name { get; } = "Device Cleanup";
     public string CliName { get; } = "device-cleanup";
@@ -44,6 +36,8 @@ public class DeviceCleanupModule : ICleanupModule
     public void Run(ProgramState state)
     {
         var devices = Enumerator.GetDevices();
+        var devicesConfig = state.ConfigurationManager[DEVICE_CONFIG];
+        _devicesToUninstall = JsonSerializer.Deserialize(devicesConfig, _serializerContext.ImmutableArrayDeviceToUninstall);
 
         foreach (var device in devices)
         {
@@ -65,15 +59,19 @@ public class DeviceCleanupModule : ICleanupModule
         }
     }
 
-    private static bool ShouldUninstall(Device device, [NotNullWhen(true)] out DeviceToUninstall? deviceToUninstall)
+    private bool ShouldUninstall(Device device, [NotNullWhen(true)] out DeviceToUninstall? deviceToUninstall)
     {
         deviceToUninstall = null;
 
-        foreach (var deviceToUninstallCandidate in DevicesToUninstall)
+        foreach (var deviceToUninstallCandidate in _devicesToUninstall)
         {
-            if (deviceToUninstallCandidate.DeviceDescriptionRegex.NullableMatch(device.FriendlyName) &&
-                deviceToUninstallCandidate.ManufacturerNameRegex.NullableMatch(device.Manufacturer) &&
-                deviceToUninstallCandidate.HardwareIdRegex.NullableMatch(device.HardwareIds) &&
+            Regex deviceDescriptionRegex = _regexCache.GetRegex(deviceToUninstallCandidate.DeviceDescription);
+            Regex? manufacturerNameRegex = _regexCache.GetRegex(deviceToUninstallCandidate.ManufacturerName);
+            Regex? hardwareIdRegex = _regexCache.GetRegex(deviceToUninstallCandidate.HardwareId);
+
+            if (deviceDescriptionRegex.NullableMatch(device.FriendlyName) &&
+                manufacturerNameRegex.NullableMatch(device.Manufacturer) &&
+                hardwareIdRegex.NullableMatch(device.HardwareIds) &&
                 (deviceToUninstallCandidate.ClassGuid is not Guid guid || guid == device.ClassGuid))
             {
                 deviceToUninstall = deviceToUninstallCandidate;
@@ -121,8 +119,8 @@ public class DeviceCleanupModule : ICleanupModule
     }
 }
 
-[JsonSourceGenerationOptions(WriteIndented = true)]
 [JsonSerializable(typeof(ImmutableArray<Device>))]
+[JsonSerializable(typeof(ImmutableArray<DeviceToUninstall>))]
 internal partial class DeviceSerializerContext : JsonSerializerContext
 {
 }
