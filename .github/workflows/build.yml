@@ -20,9 +20,9 @@ jobs:
           dotnet-version: '7.0'
           include-prerelease: True
       - name: Build
-        run: dotnet publish ./src/TabletDriverCleanup /p:PublishSingleFile=true /p:PublishTrimmed=true /p:DebugType=embedded --configuration=Release --self-contained=true -o bin
+        run: ./build.ps1
       - name: Upload artifacts
         uses: actions/upload-artifact@master
         with:
           name: TabletDriverCleanup
-          path: bin
+          path: build
