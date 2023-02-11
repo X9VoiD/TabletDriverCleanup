@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <TrimmerRootDescriptor Include="Roots.xml" />
-    <ProjectReference Include="..\PnpUtil\PnpUtil.csproj" />
   </ItemGroup>
 
   <ItemGroup>
