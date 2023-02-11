@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Text.RegularExpressions;
 
 namespace TabletDriverCleanup.Modules;
 
@@ -9,9 +8,6 @@ public class DriverToUninstall
     public string OriginalName { get; }
     public string? ProviderName { get; }
     public Guid? ClassGuid { get; }
-
-    public Regex OriginalNameRegex { get; }
-    public Regex? ProviderNameRegex { get; }
 
     public DriverToUninstall(
         string friendlyName,
@@ -23,8 +19,5 @@ public class DriverToUninstall
         OriginalName = originalName;
         ProviderName = providerName;
         ClassGuid = classGuid;
-
-        OriginalNameRegex = OriginalName.ToRegex();
-        ProviderNameRegex = ProviderName?.ToRegex();
     }
 }

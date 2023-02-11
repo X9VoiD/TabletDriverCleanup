@@ -1,0 +1,44 @@
+[
+  {
+    "FriendlyName": "VMulti",
+    "OriginalName": "vmulti\\.inf",
+    "ProviderName": "Pentablet HID",
+    "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "FriendlyName": "VMulti (Huion)",
+    "OriginalName": "vmulti\\.inf",
+    "ProviderName": "[H|h][U|u][I|i][O|o][N|n]",
+    "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "FriendlyName": "WinUSB (Hawku/Huion)",
+    "OriginalName": "tabletdriver\\.inf",
+    "ProviderName": "Graphics Tablet",
+    "ClassGuid": "88bae032-5a81-49f0-bc3d-a4ff138216d6"
+  },
+  {
+    "FriendlyName": "WinUSB (Gaomon)",
+    "OriginalName": "winusb\\.inf",
+    "ProviderName": "Gaomon",
+    "ClassGuid": "88bae032-5a81-49f0-bc3d-a4ff138216d6"
+  },
+  {
+    "FriendlyName": "WinUSB (Huion)",
+    "OriginalName": "winusb\\.inf",
+    "ProviderName": "Huion",
+    "ClassGuid": "88bae032-5a81-49f0-bc3d-a4ff138216d6"
+  },
+  {
+    "FriendlyName": "WinUSB (libwdi)",
+    "OriginalName": ".*",
+    "ProviderName": "libwdi",
+    "ClassGuid": "88bae032-5a81-49f0-bc3d-a4ff138216d6"
+  },
+  {
+    "FriendlyName": "USB-To-Serial (libwdi)",
+    "OriginalName": ".*",
+    "ProviderName": "libwdi",
+    "ClassGuid": "4d36e978-e325-11ce-bfc1-08002be10318"
+  }
+]

@@ -13,6 +13,7 @@
             "program": "${workspaceFolder}/src/TabletDriverCleanup/bin/Debug/net7.0/TabletDriverCleanup.dll",
             "args": [
                 "--no-prompt",
+                "--no-cache",
                 "--dry-run"
             ],
             "cwd": "${workspaceFolder}/src/TabletDriverCleanup",

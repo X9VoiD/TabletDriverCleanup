@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using TabletDriverCleanup.Services;
 using static Vanara.PInvoke.NewDev;
 
@@ -10,51 +11,18 @@ namespace TabletDriverCleanup.Modules;
 
 public class DriverCleanupModule : ICleanupModule
 {
+    private const string DRIVER_CONFIG = "driver_identifiers.json";
+
     private static readonly DriverSerializerContext _serializerContext = new(
         new JsonSerializerOptions()
         {
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-            WriteIndented = true
+            WriteIndented = true,
         }
     );
 
-    public static readonly ImmutableArray<DriverToUninstall> DriversToUninstall = ImmutableArray.Create(
-        new DriverToUninstall(
-            friendlyName: "VMulti",
-            originalName: @"vmulti\.inf",
-            providerName: "Pentablet HID",
-            classGuid: Guids.HIDClass),
-        new DriverToUninstall(
-            friendlyName: "VMulti",
-            originalName: @"vmulti\.inf",
-            providerName: "[H|h][U|u][I|i][O|o][N|n]",
-            classGuid: Guids.HIDClass),
-        new DriverToUninstall(
-            friendlyName: "WinUSB (Hawku/Huion)",
-            originalName: @"tabletdriver\.inf",
-            providerName: "Graphics Tablet",
-            classGuid: Guids.USBDevice),
-        new DriverToUninstall(
-            friendlyName: "WinUSB (Gaomon)",
-            originalName: @"winusb\.inf",
-            providerName: "Gaomon",
-            classGuid: Guids.USBDevice),
-        new DriverToUninstall(
-            friendlyName: "WinUSB (Huion)",
-            originalName: @"winusb\.inf",
-            providerName: "Huion",
-            classGuid: Guids.USBDevice),
-        new DriverToUninstall(
-            friendlyName: "WinUSB (libwdi)",
-            originalName: @".*",
-            providerName: "libwdi",
-            classGuid: Guids.USBDevice),
-        new DriverToUninstall(
-            friendlyName: "USB-To-Serial (libwdi)",
-            originalName: @".*",
-            providerName: "libwdi",
-            classGuid: Guids.Ports)
-    );
+    private ImmutableArray<DriverToUninstall> _driversToUninstall;
+    private readonly RegexCache _regexCache = new();
 
     public string Name { get; } = "Driver Cleanup";
     public string CliName { get; } = "driver-cleanup";
@@ -66,6 +34,8 @@ public class DriverCleanupModule : ICleanupModule
     public void Run(ProgramState state)
     {
         var drivers = Enumerator.GetDrivers();
+        var driverConfig = state.ConfigurationManager[DRIVER_CONFIG];
+        _driversToUninstall = JsonSerializer.Deserialize(driverConfig, _serializerContext.ImmutableArrayDriverToUninstall)!;
 
         foreach (var driver in drivers)
         {
@@ -87,14 +57,17 @@ public class DriverCleanupModule : ICleanupModule
         }
     }
 
-    private static bool ShouldUninstall(Driver driver, [NotNullWhen(true)] out DriverToUninstall? driverToUninstall)
+    private bool ShouldUninstall(Driver driver, [NotNullWhen(true)] out DriverToUninstall? driverToUninstall)
     {
         driverToUninstall = null;
 
-        foreach (var driverToUninstallCandidate in DriversToUninstall)
+        foreach (var driverToUninstallCandidate in _driversToUninstall)
         {
-            if (driverToUninstallCandidate.OriginalNameRegex.NullableMatch(driver.InfOriginalName) &&
-                driverToUninstallCandidate.ProviderNameRegex.NullableMatch(driver.Provider) &&
+            Regex originalNameRegex = _regexCache.GetRegex(driverToUninstallCandidate.OriginalName);
+            Regex? providerNameRegex = _regexCache.GetRegex(driverToUninstallCandidate.ProviderName);
+
+            if (originalNameRegex.NullableMatch(driver.InfOriginalName) &&
+                providerNameRegex.NullableMatch(driver.Provider) &&
                 (driverToUninstallCandidate.ClassGuid is not Guid guid || guid == driver.ClassGuid))
             {
                 driverToUninstall = driverToUninstallCandidate;
@@ -126,8 +99,8 @@ public class DriverCleanupModule : ICleanupModule
     }
 }
 
-[JsonSourceGenerationOptions(WriteIndented = true)]
 [JsonSerializable(typeof(ImmutableArray<Driver>))]
+[JsonSerializable(typeof(ImmutableArray<DriverToUninstall>))]
 internal partial class DriverSerializerContext : JsonSerializerContext
 {
 }
