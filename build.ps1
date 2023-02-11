@@ -1,0 +1,1 @@
+dotnet publish .\src\TabletDriverCleanup\ /p:PublishSingleFile=true /p:PublishTrimmed=true /p:DebugType=embedded --configuration=Release --self-contained=true -o ./build

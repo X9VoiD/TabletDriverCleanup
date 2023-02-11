@@ -11,7 +11,10 @@
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/src/TabletDriverCleanup/bin/Debug/net7.0/TabletDriverCleanup.dll",
-            "args": [],
+            "args": [
+                "--no-prompt",
+                "--dry-run"
+            ],
             "cwd": "${workspaceFolder}/src/TabletDriverCleanup",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
