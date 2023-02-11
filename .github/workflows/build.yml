@@ -18,7 +18,6 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '7.0'
-          include-prerelease: True
       - name: Build
         run: ./build.ps1
       - name: Upload artifacts
