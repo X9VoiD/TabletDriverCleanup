@@ -10,6 +10,7 @@ public class ProgramState
     public bool Interactive { get; set; } = true;
     public bool DryRun { get; set; }
     public bool Dump { get; set; }
+    public bool NoCache { get; set; }
 
     // Runtime state
     public bool RebootNeeded { get; set; }

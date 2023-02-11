@@ -123,6 +123,10 @@ public static partial class Program
                     state.Interactive = false;
                     break;
 
+                case "--no-cache":
+                    state.NoCache = true;
+                    break;
+
                 case string when arg.StartsWith("--no-"):
                     var moduleName = arg.AsSpan()[5..];
 
@@ -167,6 +171,7 @@ public static partial class Program
         Console.WriteLine("Options:");
 
         Console.WriteLine("  --no-prompt\t\t\tdo not prompt for user input");
+        Console.WriteLine("  --no-cache\t\t\tdo not use cached data in ./config");
 
         foreach (var module in state.Modules)
             Console.WriteLine($"  --no-{module.CliName}\t\t{module.DisablementDescription}");

@@ -6,7 +6,7 @@ namespace TabletDriverCleanup;
 public class ConfigurationManager
 {
     private const string CONFIG_BASE_URL = "https://raw.githubusercontent.com/X9VoiD/TabletDriverCleanup";
-    private const string REF = "json";
+    private const string REF = "v3.x";
     private readonly ProgramState _state;
 
     public ConfigurationManager(ProgramState state)
@@ -21,7 +21,7 @@ public class ConfigurationManager
 
     public bool TryGetConfiguration(string configurationName, [NotNullWhen(true)] out string? configuration)
     {
-        if (TryGetConfigurationOffline(configurationName, out configuration)
+        if ((!_state.NoCache && TryGetConfigurationOffline(configurationName, out configuration))
             || TryGetConfigurationOnline(configurationName, out configuration)
             || TryGetConfigurationInAssembly(configurationName, out configuration))
         {
@@ -56,7 +56,10 @@ public class ConfigurationManager
 
     private bool TryGetConfigurationOnline(string configurationName, [NotNullWhen(true)] out string? configuration)
     {
-        string targetDir = Path.Join(_state.CurrentPath, "config");
+        string targetDir = _state.NoCache
+            ? Path.Join(Path.GetTempPath(), Path.GetRandomFileName(), "config")
+            : Path.Join(_state.CurrentPath, "config");
+
         string targetPath = Path.Join(targetDir, configurationName);
         if (!Directory.Exists(targetDir))
             Directory.CreateDirectory(targetDir);
