@@ -62,8 +62,14 @@ public static partial class Program
             {
                 Console.WriteLine(ex);
                 Console.WriteLine($"\nErrors were encountered while running '{module.Name}'. Aborting!");
-                Console.WriteLine("Press Enter to continue...");
-                Console.ReadKey();
+
+                if (state.Interactive)
+                {
+                    Console.WriteLine("Press Enter to continue...");
+                    Console.ReadKey();
+                }
+
+                Environment.Exit(1);
             }
         }
 
