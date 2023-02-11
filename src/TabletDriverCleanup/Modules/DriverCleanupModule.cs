@@ -48,7 +48,12 @@ public class DriverCleanupModule : ICleanupModule
             friendlyName: "WinUSB (libwdi)",
             originalName: @".*",
             providerName: "libwdi",
-            classGuid: Guids.USBDevice)
+            classGuid: Guids.USBDevice),
+        new DriverToUninstall(
+            friendlyName: "USB-To-Serial (libwdi)",
+            originalName: @".*",
+            providerName: "libwdi",
+            classGuid: Guids.Ports)
     );
 
     public string Name { get; } = "Driver Cleanup";
