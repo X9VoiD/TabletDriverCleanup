@@ -39,7 +39,7 @@ public static partial class Program
             CheckAdmin();
 
         if (state.DryRun)
-            Console.WriteLine("Dry run, no changes will be made.");
+            Console.WriteLine("Dry run, no changes will be made.\n");
 
         if (!state.DryRun && state.Interactive)
         {
