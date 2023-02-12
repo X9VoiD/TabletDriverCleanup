@@ -18,6 +18,42 @@
     "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
   },
   {
+    "FriendlyName": "Wacom Android Debug Bridge (ADB) Driver",
+    "OriginalName": "android_winusb\\.inf",
+    "ProviderName": "Wacom",
+    "ClassGuid": "3f966bd9-fa04-4ec5-991c-d326973b5128"
+  },
+  {
+    "FriendlyName": "Wacom MultiTouch Driver",
+    "OriginalName": "wacmultitouch\\.inf",
+    "ProviderName": "Wacom",
+    "ClassGuid": "6d3963a7-0f27-4d42-a63b-671f74fbddc9"
+  },
+  {
+    "FriendlyName": "Wacom Paper",
+    "OriginalName": "wacpaper\\.inf",
+    "ProviderName": "Wacom",
+    "ClassGuid": "88bae032-5a81-49f0-bc3d-a4ff138216d6"
+  },
+  {
+    "FriendlyName": "Wacom Router (Mouse)",
+    "OriginalName": "wacomrouterfilter\\.inf",
+    "ProviderName": "Wacom Technology",
+    "ClassGuid": "4d36e96f-e325-11ce-bfc1-08002be10318"
+  },
+  {
+    "FriendlyName": "Wacom Router (Tablet)",
+    "OriginalName": "wachidrouter_pro\\.inf",
+    "ProviderName": "Wacom",
+    "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "FriendlyName": "Wacom WUSD",
+    "OriginalName": "wacom_wusd\\.inf",
+    "ProviderName": "Wacom Technology",
+    "ClassGuid": "88bae032-5a81-49f0-bc3d-a4ff138216d6"
+  },
+  {
     "FriendlyName": "WinUSB (Gaomon)",
     "OriginalName": "winusb\\.inf",
     "ProviderName": "Gaomon",
