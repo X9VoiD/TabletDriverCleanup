@@ -54,6 +54,12 @@
     "ClassGuid": "88bae032-5a81-49f0-bc3d-a4ff138216d6"
   },
   {
+    "FriendlyName": "WinUSB (libwdi)",
+    "OriginalName": ".*",
+    "ProviderName": "libwdi",
+    "ClassGuid": "88bae032-5a81-49f0-bc3d-a4ff138216d6"
+  },
+  {
     "FriendlyName": "WinUSB (Gaomon)",
     "OriginalName": "winusb\\.inf",
     "ProviderName": "Gaomon",
@@ -69,12 +75,6 @@
     "FriendlyName": "WinUSB (Huion)",
     "OriginalName": "winusb\\.inf",
     "ProviderName": "Huion",
-    "ClassGuid": "88bae032-5a81-49f0-bc3d-a4ff138216d6"
-  },
-  {
-    "FriendlyName": "WinUSB (libwdi)",
-    "OriginalName": ".*",
-    "ProviderName": "libwdi",
     "ClassGuid": "88bae032-5a81-49f0-bc3d-a4ff138216d6"
   }
 ]
