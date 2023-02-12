@@ -1,14 +1,14 @@
 [
   {
-    "FriendlyName": "Wacom Driver Downloader",
-    "DeviceDescription": "Wacom Driver Downloader",
-    "ManufacturerName": "Wacom Technology"
-  },
-  {
     "FriendlyName": "VMulti Device",
     "DeviceDescription": "Pentablet HID",
     "ManufacturerName": "Pentablet HID",
     "HardwareID": "pentablet\\\\hid",
     "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "FriendlyName": "Wacom Driver Downloader",
+    "DeviceDescription": "Wacom Driver Downloader",
+    "ManufacturerName": "Wacom Technology"
   }
 ]
