@@ -14,7 +14,7 @@
   {
     "FriendlyName": "VMulti (Huion)",
     "OriginalName": "vmulti\\.inf",
-    "ProviderName": "[H|h][U|u][I|i][O|o][N|n]",
+    "ProviderName": "(?i)huion",
     "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
   },
   {
