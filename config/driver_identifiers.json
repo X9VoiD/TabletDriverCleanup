@@ -48,6 +48,12 @@
     "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
   },
   {
+    "FriendlyName": "Wacom Router (Tablet)",
+    "OriginalName": "wachidrouter_con\\.inf",
+    "ProviderName": "Wacom",
+    "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
     "FriendlyName": "Wacom WUSD",
     "OriginalName": "wacom_wusd\\.inf",
     "ProviderName": "Wacom Technology",
