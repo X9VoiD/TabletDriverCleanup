@@ -3,9 +3,13 @@ name: Build TabletDriverCleanup
 on:
   workflow_dispatch:
   push:
+    paths:
+      - src/TabletDriverCleanup
     branches:
       - main
   pull_request:
+    paths:
+      - src/TabletDriverCleanup
 
 jobs:
   windowsbuild:
