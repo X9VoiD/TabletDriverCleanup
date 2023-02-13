@@ -16,12 +16,8 @@ public static class Downloader
 
             using var content = response.Content;
 
-            var data = await content.ReadAsByteArrayAsync();
-
-            if (File.Exists(path))
-                File.Delete(path);
-
-            File.WriteAllBytes(path, data);
+            using var file = File.Open(path, FileMode.Create);
+            await content.CopyToAsync(file);
         }).Wait();
     }
 }
