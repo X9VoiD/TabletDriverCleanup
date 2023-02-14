@@ -2,10 +2,12 @@ using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.Win32;
+using TabletDriverCleanup.Modules;
 using Vanara.PInvoke;
-using static Vanara.PInvoke.CfgMgr32;
 using static Vanara.PInvoke.SetupAPI;
 
 namespace TabletDriverCleanup.Services;
@@ -99,6 +101,43 @@ public static partial class Enumerator
         }
 
         return driverBuilder.ToImmutable();
+    }
+
+    [SupportedOSPlatform("windows")]
+    public static ImmutableArray<DriverPackage> GetDriverPackages()
+    {
+        var driverPackageBuilder = ImmutableArray.CreateBuilder<DriverPackage>();
+
+        var uninstallListKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
+        var x86UninstallListKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall");
+
+        if (uninstallListKey is not null)
+        {
+            foreach (var subKey in uninstallListKey.GetSubKeyNames())
+            {
+                var key = uninstallListKey.OpenSubKey(subKey);
+                if (key is null)
+                    continue;
+
+                var driverPackage = DriverPackage.FromRegistryKey(key);
+                driverPackageBuilder.Add(driverPackage);
+            }
+        }
+
+        if (x86UninstallListKey is not null)
+        {
+            foreach (var subKey in x86UninstallListKey.GetSubKeyNames())
+            {
+                var key = x86UninstallListKey.OpenSubKey(subKey);
+                if (key is null)
+                    continue;
+
+                var driverPackage = DriverPackage.FromRegistryKey(key);
+                driverPackageBuilder.Add(driverPackage);
+            }
+        }
+
+        return driverPackageBuilder.ToImmutable();
     }
 
     private static string GetDeviceInstanceId(SafeHDEVINFO deviceInfoSet, in SP_DEVINFO_DATA deviceInfo)

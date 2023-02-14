@@ -11,6 +11,7 @@ public class ProgramState
     public bool DryRun { get; set; }
     public bool Dump { get; set; }
     public bool NoCache { get; set; }
+    public bool NoUpdate { get; set; }
 
     // Runtime state
     public bool RebootNeeded { get; set; }

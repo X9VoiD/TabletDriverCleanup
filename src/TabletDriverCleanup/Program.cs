@@ -11,7 +11,7 @@ public static partial class Program
     {
         return new ICleanupModule[]
         {
-            // new DriverSoftwareCleanupModule(),
+            new DriverPackageCleanupModule(),
             new DeviceCleanupModule(),
             new DriverCleanupModule(),
         };
@@ -41,13 +41,13 @@ public static partial class Program
         if (state.DryRun)
             Console.WriteLine("Dry run, no changes will be made.\n");
 
-        if (!state.DryRun && state.Interactive)
-        {
-            Console.WriteLine("Make sure that all tablet drivers have been uninstalled via their official uninstallers.");
-            Console.WriteLine("Once done, press Enter to continue...");
-            Console.ReadKey();
-            Console.WriteLine();
-        }
+        // if (!state.DryRun && state.Interactive)
+        // {
+        //     Console.WriteLine("Make sure that all tablet drivers have been uninstalled via their official uninstallers.");
+        //     Console.WriteLine("Once done, press Enter to continue...");
+        //     Console.ReadKey();
+        //     Console.WriteLine();
+        // }
 
         foreach (var module in modules.Where(m => m.Enabled))
         {
@@ -65,7 +65,7 @@ public static partial class Program
 
                 if (state.Interactive)
                 {
-                    Console.WriteLine("Press Enter to continue...");
+                    Console.WriteLine("Press any key to continue...");
                     Console.ReadKey();
                 }
 
@@ -78,7 +78,7 @@ public static partial class Program
             if (state.Interactive)
             {
                 Console.WriteLine("\nReboot is required to complete the cleanup.");
-                Console.WriteLine("Press Enter to reboot now, or Ctrl+C to cancel.");
+                Console.WriteLine("Press any key to reboot now, or Ctrl+C to cancel.");
                 Console.ReadKey();
             }
             Process.Start("shutdown", "/r /t 0");
@@ -87,13 +87,12 @@ public static partial class Program
 
         if (state.Interactive)
         {
-            Console.WriteLine("\nCleanup complete. Press Enter to continue...");
+            Console.WriteLine("\nCleanup complete. Press any key to continue...");
             Console.ReadKey();
         }
 
         return 0;
     }
-
 
     [SupportedOSPlatform("windows")]
     private static void CheckAdmin()
@@ -103,7 +102,7 @@ public static partial class Program
         if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
         {
             Console.Error.WriteLine("This program must be run as administrator.");
-            Console.WriteLine("\nPress Enter to continue...");
+            Console.WriteLine("\nPress any key to continue...");
             Console.ReadKey();
             Environment.Exit(1);
         }
@@ -125,6 +124,10 @@ public static partial class Program
 
                 case "--no-cache":
                     state.NoCache = true;
+                    break;
+
+                case "--no-update":
+                    state.NoUpdate = true;
                     break;
 
                 case string when arg.StartsWith("--no-"):
@@ -172,6 +175,7 @@ public static partial class Program
 
         Console.WriteLine("  --no-prompt\t\t\tdo not prompt for user input");
         Console.WriteLine("  --no-cache\t\t\tdo not use cached data in ./config");
+        Console.WriteLine("  --no-update\t\t\tdo not check for config updates");
 
         foreach (var module in state.Modules)
             Console.WriteLine($"  --no-{module.CliName}\t\t{module.DisablementDescription}");

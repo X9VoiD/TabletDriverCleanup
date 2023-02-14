@@ -1,21 +1,68 @@
 [
   {
-    "FriendlyName": "USB-To-Serial (libwdi)",
+    "FriendlyName": "AcePen Art Filter Device",
+    "OriginalName": "artfiltr_digitizer_upin\\.inf",
+    "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "FriendlyName": "Serial over USB (libwdi)",
     "OriginalName": ".*",
     "ProviderName": "libwdi",
     "ClassGuid": "4d36e978-e325-11ce-bfc1-08002be10318"
   },
   {
+    "FriendlyName": "Tablet Device",
+    "OriginalName": "inkdevice\\.inf",
+    "ProviderName": "Tablet\\.Inc",
+    "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "FriendlyName": "Veikk Virtual Device (vmulti)",
+    "OriginalName": "vkdevice\\.inf",
+    "ProviderName": "Veikk",
+    "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "FriendlyName": "Veikk WinUSB Device",
+    "OriginalName": "usbtabletdevice\\.inf",
+    "ProviderName": "Veikk",
+    "ClassGuid": "108d8180-d429-450b-afa4-ac19039fc96f"
+  },
+  {
     "FriendlyName": "VMulti",
     "OriginalName": "vmulti\\.inf",
-    "ProviderName": "Pentablet HID",
+    "ProviderName": "Pentablet ?HID",
+    "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "FriendlyName": "VMulti (Gaomon)",
+    "OriginalName": "vmulti\\.inf",
+    "ProviderName": "Gaomon",
     "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
   },
   {
     "FriendlyName": "VMulti (Huion)",
     "OriginalName": "vmulti\\.inf",
-    "ProviderName": "(?i)huion",
+    "ProviderName": "Huion",
     "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "FriendlyName": "UCLogic Simulator Bus Enumerator",
+    "OriginalName": "PTSimBus\\.inf",
+    "ProviderName": "PenTablet",
+    "ClassGuid": "4d36e97d-e325-11ce-bfc1-08002be10318"
+  },
+  {
+    "FriendlyName": "UCLogic Simulated PenTablet HID",
+    "OriginalName": "PTSimHid\\.inf",
+    "ProviderName": "PenTablet",
+    "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "FriendlyName": "UCLogic Tablet2K",
+    "OriginalName": "Tablet2k\\.inf",
+    "ProviderName": "PenTablet",
+    "ClassGuid": "b322bfc4-e954-11d3-827e-0080c8ef9f99"
   },
   {
     "FriendlyName": "Wacom Android Debug Bridge (ADB) Driver",
@@ -74,7 +121,7 @@
   {
     "FriendlyName": "WinUSB (Hawku/Huion)",
     "OriginalName": "tabletdriver\\.inf",
-    "ProviderName": "Graphics Tablet",
+    "ProviderName": "Graphics ?Tablet",
     "ClassGuid": "88bae032-5a81-49f0-bc3d-a4ff138216d6"
   },
   {

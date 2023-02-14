@@ -1,6 +1,5 @@
 using System.Collections.Immutable;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -11,7 +10,7 @@ using static Vanara.PInvoke.SetupAPI;
 
 namespace TabletDriverCleanup.Modules;
 
-public class DeviceCleanupModule : ICleanupModule
+public class DeviceCleanupModule : BaseCleanupModule<Device, DeviceToUninstall>
 {
     private const string DEVICE_CONFIG = "device_identifiers.json";
 
@@ -23,71 +22,54 @@ public class DeviceCleanupModule : ICleanupModule
         }
     );
 
-    private ImmutableArray<DeviceToUninstall> _devicesToUninstall;
-    private readonly RegexCache _regexCache = new();
+    public override string Name => "Device Cleanup";
+    public override string CliName => "device-cleanup";
+    public override string DisablementDescription => "do not remove devices from the system";
 
-    public string Name { get; } = "Device Cleanup";
-    public string CliName { get; } = "device-cleanup";
-    public string DisablementDescription => "do not remove devices from the system";
-    public bool Enabled { get; set; } = true;
+    public override bool SupportsDump => true;
 
-    public bool SupportsDump => true;
+    protected override string Noun => "devices";
 
-    public void Run(ProgramState state)
+    public override void Dump(ProgramState state)
     {
-        var devices = Enumerator.GetDevices();
+        Regex infRegex = Enumerator.InfRegex();
+        ImmutableArray<Device> devices = Enumerator.GetDevices()
+            .Where(device => infRegex.IsMatch(device.InfName ?? string.Empty))
+            .Where(IsOfInterest)
+            .ToImmutableArray();
+
+        using var stream = GetDumpFileStream(state, "devices.json");
+        if (devices.Length == 0)
+        {
+            Console.WriteLine("No devices to dump");
+            return;
+        }
+        JsonSerializer.Serialize(stream, devices, _serializerContext.ImmutableArrayDevice);
+
+        Console.WriteLine($"Dumped {devices.Length} devices to 'devices.json'");
+    }
+
+    private bool IsOfInterest(Device arg)
+    {
+        return StringOfInterest.IsCandidate(
+            arg.Description,
+            arg.Manufacturer,
+            arg.InfOriginalName)
+        || StringOfInterest.IsCandidate(arg.HardwareIds);
+    }
+
+    protected override IEnumerable<Device> GetObjects(ProgramState state)
+    {
+        return Enumerator.GetDevices();
+    }
+
+    protected override ImmutableArray<DeviceToUninstall> GetObjectsToUninstall(ProgramState state)
+    {
         var devicesConfig = state.ConfigurationManager[DEVICE_CONFIG];
-        _devicesToUninstall = JsonSerializer.Deserialize(devicesConfig, _serializerContext.ImmutableArrayDeviceToUninstall);
-
-        var found = false;
-        foreach (var device in devices)
-        {
-            if (ShouldUninstall(device, out var deviceToUninstall))
-            {
-                found = true;
-                if (state.Interactive && !state.DryRun)
-                {
-                    var promptResult = ConsoleUtility.PromptYesNo($"Remove '{deviceToUninstall.FriendlyName}'?");
-                    if (promptResult == PromptResult.No)
-                        continue;
-                    else if (promptResult == PromptResult.Cancel)
-                        Environment.Exit(0);
-                }
-                Console.WriteLine($"Removing '{deviceToUninstall.FriendlyName}'...");
-
-                if (!state.DryRun)
-                    RemoveDevice(state, device);
-            }
-        }
-
-        if (!found)
-            Console.WriteLine("No devices to remove is found.");
+        return JsonSerializer.Deserialize(devicesConfig, _serializerContext.ImmutableArrayDeviceToUninstall);
     }
 
-    private bool ShouldUninstall(Device device, [NotNullWhen(true)] out DeviceToUninstall? deviceToUninstall)
-    {
-        deviceToUninstall = null;
-
-        foreach (var deviceToUninstallCandidate in _devicesToUninstall)
-        {
-            Regex deviceDescriptionRegex = _regexCache.GetRegex(deviceToUninstallCandidate.DeviceDescription);
-            Regex? manufacturerNameRegex = _regexCache.GetRegex(deviceToUninstallCandidate.ManufacturerName);
-            Regex? hardwareIdRegex = _regexCache.GetRegex(deviceToUninstallCandidate.HardwareId);
-
-            if (deviceDescriptionRegex.NullableMatch(device.FriendlyName) &&
-                manufacturerNameRegex.NullableMatch(device.Manufacturer) &&
-                hardwareIdRegex.NullableMatch(device.HardwareIds) &&
-                (deviceToUninstallCandidate.ClassGuid is not Guid guid || guid == device.ClassGuid))
-            {
-                deviceToUninstall = deviceToUninstallCandidate;
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private static void RemoveDevice(ProgramState state, Device device)
+    protected override void UninstallObject(ProgramState state, Device device, DeviceToUninstall deviceToUninstall)
     {
         using var deviceInfoSet = SetupDiCreateDeviceInfoList();
         if (deviceInfoSet.IsInvalid)
@@ -108,19 +90,6 @@ public class DeviceCleanupModule : ICleanupModule
 
         if (rebootRequired)
             state.RebootNeeded = true;
-    }
-
-    public void Dump(ProgramState state)
-    {
-        Regex infRegex = Enumerator.InfRegex();
-        ImmutableArray<Device> devices = Enumerator.GetDevices()
-            .Where(device => infRegex.IsMatch(device.InfName ?? string.Empty))
-            .ToImmutableArray();
-
-        using FileStream stream = File.Open(Path.Join(state.CurrentPath, "devices.json"), FileMode.Create, FileAccess.Write);
-        JsonSerializer.Serialize(stream, devices, _serializerContext.ImmutableArrayDevice);
-
-        Console.WriteLine($"Dumped {devices.Length} devices to 'devices.json'");
     }
 }
 

@@ -1,15 +1,13 @@
 using System.Collections.Immutable;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
 using TabletDriverCleanup.Services;
 using static Vanara.PInvoke.NewDev;
 
 namespace TabletDriverCleanup.Modules;
 
-public class DriverCleanupModule : ICleanupModule
+public class DriverCleanupModule : BaseCleanupModule<Driver, DriverToUninstall>
 {
     private const string DRIVER_CONFIG = "driver_identifiers.json";
 
@@ -21,69 +19,50 @@ public class DriverCleanupModule : ICleanupModule
         }
     );
 
-    private ImmutableArray<DriverToUninstall> _driversToUninstall;
-    private readonly RegexCache _regexCache = new();
+    public override string Name => "Driver Cleanup";
+    public override string CliName => "driver-cleanup";
+    public override string DisablementDescription => "do not uninstall drivers from the system";
 
-    public string Name { get; } = "Driver Cleanup";
-    public string CliName { get; } = "driver-cleanup";
-    public string DisablementDescription { get; } = "do not uninstall drivers from the system";
-    public bool Enabled { get; set; } = true;
+    public override bool SupportsDump => true;
 
-    public bool SupportsDump => true;
+    protected override string Noun => "drivers";
 
-    public void Run(ProgramState state)
+    public override void Dump(ProgramState state)
     {
-        var drivers = Enumerator.GetDrivers();
+        ImmutableArray<Driver> drivers = Enumerator.GetDrivers()
+            .Where(IsOfInterest)
+            .ToImmutableArray();
+
+        using var stream = GetDumpFileStream(state, "drivers.json");
+        if (drivers.Length == 0)
+        {
+            Console.WriteLine("No drivers to dump");
+            return;
+        }
+        JsonSerializer.Serialize(stream, drivers, _serializerContext.ImmutableArrayDriver);
+
+        Console.WriteLine($"Dumped {drivers.Length} drivers to 'drivers.json'");
+    }
+
+    private bool IsOfInterest(Driver arg)
+    {
+        return StringOfInterest.IsCandidate(
+            arg.InfOriginalName,
+            arg.Provider);
+    }
+
+    protected override IEnumerable<Driver> GetObjects(ProgramState state)
+    {
+        return Enumerator.GetDrivers();
+    }
+
+    protected override ImmutableArray<DriverToUninstall> GetObjectsToUninstall(ProgramState state)
+    {
         var driverConfig = state.ConfigurationManager[DRIVER_CONFIG];
-        _driversToUninstall = JsonSerializer.Deserialize(driverConfig, _serializerContext.ImmutableArrayDriverToUninstall)!;
-
-        var found = false;
-        foreach (var driver in drivers)
-        {
-            if (ShouldUninstall(driver, out var driverToUninstall))
-            {
-                found = true;
-                if (state.Interactive && !state.DryRun)
-                {
-                    var promptResult = ConsoleUtility.PromptYesNo($"Uninstall '{driverToUninstall.FriendlyName}'?");
-                    if (promptResult == PromptResult.No)
-                        continue;
-                    else if (promptResult == PromptResult.Cancel)
-                        Environment.Exit(0);
-                }
-                Console.WriteLine($"Uninstalling '{driverToUninstall.FriendlyName}'...");
-
-                if (!state.DryRun)
-                    UninstallDriver(state, driver);
-            }
-        }
-
-        if (!found)
-            Console.WriteLine("No drivers to uninstall is found.");
+        return JsonSerializer.Deserialize(driverConfig, _serializerContext.ImmutableArrayDriverToUninstall)!;
     }
 
-    private bool ShouldUninstall(Driver driver, [NotNullWhen(true)] out DriverToUninstall? driverToUninstall)
-    {
-        driverToUninstall = null;
-
-        foreach (var driverToUninstallCandidate in _driversToUninstall)
-        {
-            Regex originalNameRegex = _regexCache.GetRegex(driverToUninstallCandidate.OriginalName);
-            Regex? providerNameRegex = _regexCache.GetRegex(driverToUninstallCandidate.ProviderName);
-
-            if (originalNameRegex.NullableMatch(driver.InfOriginalName) &&
-                providerNameRegex.NullableMatch(driver.Provider) &&
-                (driverToUninstallCandidate.ClassGuid is not Guid guid || guid == driver.ClassGuid))
-            {
-                driverToUninstall = driverToUninstallCandidate;
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private static void UninstallDriver(ProgramState state, Driver driver)
+    protected override void UninstallObject(ProgramState state, Driver driver, DriverToUninstall driverToUninstall)
     {
         var infPath = Path.Join(driver.DriverStoreLocation, driver.InfOriginalName);
         if (!DiUninstallDriver(0, infPath, 0, out bool rebootRequired))
@@ -91,16 +70,6 @@ public class DriverCleanupModule : ICleanupModule
 
         if (rebootRequired)
             state.RebootNeeded = true;
-    }
-
-    public void Dump(ProgramState state)
-    {
-        ImmutableArray<Driver> drivers = Enumerator.GetDrivers();
-
-        using FileStream stream = File.Open(Path.Join(state.CurrentPath, "drivers.json"), FileMode.Create, FileAccess.Write);
-        JsonSerializer.Serialize(stream, drivers, _serializerContext.ImmutableArrayDriver);
-
-        Console.WriteLine($"Dumped {drivers.Length} drivers to 'drivers.json'");
     }
 }
 

@@ -23,6 +23,26 @@ public static class ConsoleUtility
     {
         Console.Write(new string(' ', Console.BufferWidth - 1) + "\r");
     }
+
+    public static void TemporaryPrint(Action action)
+    {
+        (int Left, int Top) = Console.GetCursorPosition();
+        action();
+        Console.SetCursorPosition(Left, Top);
+        ClearLine();
+    }
+
+    public static async Task<ConsoleKeyInfo?> ReadKeyAsync(CancellationToken ct = default)
+    {
+        while (!Console.KeyAvailable)
+        {
+            if (ct.IsCancellationRequested)
+                throw new OperationCanceledException();
+            await Task.Delay(TimeSpan.FromMilliseconds(50), ct);
+        }
+
+        return Console.ReadKey();
+    }
 }
 
 public enum PromptResult

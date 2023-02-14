@@ -1,8 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
+using TabletDriverCleanup.Services;
 
 namespace TabletDriverCleanup.Modules;
 
-public class DriverToUninstall
+public class DriverToUninstall : IObjectToUninstall
 {
     public string FriendlyName { get; init; }
     public string OriginalName { get; }
@@ -19,5 +20,23 @@ public class DriverToUninstall
         OriginalName = originalName;
         ProviderName = providerName;
         ClassGuid = classGuid;
+    }
+
+    public bool Matches(RegexCache regexCache, object obj)
+    {
+        if (obj is not Driver driver)
+            return false;
+
+        var originalNameRegex = regexCache.GetRegex(OriginalName);
+        var providerNameRegex = regexCache.GetRegex(ProviderName);
+
+        return originalNameRegex.NullableMatch(driver.InfOriginalName) &&
+            providerNameRegex.NullableMatch(driver.Provider) &&
+            (ClassGuid is not Guid guid || guid == driver.ClassGuid);
+    }
+
+    public override string ToString()
+    {
+        return FriendlyName;
     }
 }

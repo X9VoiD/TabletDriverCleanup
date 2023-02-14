@@ -1,0 +1,90 @@
+[
+  {
+    "FriendlyName": "Artisul Tablet v16.x",
+    "UninstallMethod": "deferred",
+    "DisplayName": "ArtisulTablet",
+    "DisplayVersion": "^16"
+  },
+  {
+    "FriendlyName": "Digitizer Panel 2",
+    "UninstallMethod": "installshield",
+    "DisplayName": "DigitizerPanel2",
+    "DisplayVersion": "^1"
+  },
+  {
+    "FriendlyName": "Gaomon Tablet v14.x",
+    "UninstallMethod": "normal",
+    "DisplayName": "Gaomon ?Tablet",
+    "DisplayVersion": "^v14"
+  },
+  {
+    "FriendlyName": "Gaomon Tablet v16.x",
+    "UninstallMethod": "deferred",
+    "DisplayName": "Gaomon ?Tablet",
+    "DisplayVersion": "^16"
+  },
+  {
+    "FriendlyName": "Genius Tablet",
+    "UninstallMethod": "installshield",
+    "DisplayName": "ioTablet",
+    "DisplayVersion": "^1"
+  },
+  {
+    "FriendlyName": "Graphic Tablet v4.x",
+    "UninstallMethod": "normal",
+    "DisplayName": "Graphic ?Tablet",
+    "DisplayVersion": "^4"
+  },
+  {
+    "FriendlyName": "Huion v14.x",
+    "UninstallMethod": "normal",
+    "DisplayName": "Huion ?Tablet",
+    "DisplayVersion": "^v14"
+  },
+  {
+    "FriendlyName": "Huion v15.x",
+    "UninstallMethod": "deferred",
+    "DisplayName": "Huion ?Tablet",
+    "DisplayVersion": "^15"
+  },
+  {
+    "FriendlyName": "PenTabletDriver v1.x",
+    "UninstallMethod": "normal",
+    "DisplayName": "PenTabletDriver",
+    "DisplayVersion": "^1"
+  },
+  {
+    "FriendlyName": "PenTabletDriver v3.x",
+    "UninstallMethod": "normal",
+    "DisplayName": "PenTabletDriver",
+    "DisplayVersion": "^3"
+  },
+  {
+    "FriendlyName": "PenTabletDriver v11.x",
+    "UninstallMethod": "normal",
+    "DisplayName": "UninstallTabletDeviceDriver",
+    "DisplayVersion": "^11"
+  },
+  {
+    "FriendlyName": "PenTabletDriver v12.x",
+    "UninstallMethod": "normal",
+    "DisplayName": "UninstallTabletDeviceDriver",
+    "DisplayVersion": "^12"
+  },
+  {
+    "FriendlyName": "PenTabletDriver v12.x",
+    "UninstallMethod": "normal",
+    "DisplayName": "PenTabletDriver",
+    "DisplayVersion": "^12"
+  },
+  {
+    "FriendlyName": "Windows Driver Package - Graphics Tablet (WinUsb) USBDevice",
+    "UninstallMethod": "registry_only",
+    "DisplayName": "Windows Driver Package - Graphics Tablet \\(WinUsb\\) USBDevice"
+  },
+  {
+    "FriendlyName": "Windows Driver Package - Veikk (WinUsb) USBVeikk",
+    "UninstallMethod": "registry_only",
+    "DisplayName": "Windows Driver Package - Veikk \\(WinUsb\\) USBVeikk"
+  }
+]

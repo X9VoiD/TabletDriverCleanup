@@ -1,8 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
+using TabletDriverCleanup.Services;
 
 namespace TabletDriverCleanup.Modules;
 
-public class DeviceToUninstall
+public class DeviceToUninstall : IObjectToUninstall
 {
     public string FriendlyName { get; }
     public string DeviceDescription { get; }
@@ -25,5 +26,25 @@ public class DeviceToUninstall
         ManufacturerName = manufacturerName;
         HardwareId = hardwareId;
         ClassGuid = classGuid;
+    }
+
+    public bool Matches(RegexCache regexCache, object obj)
+    {
+        if (obj is not Device device)
+            return false;
+
+        var deviceDescriptionRegex = regexCache.GetRegex(DeviceDescription);
+        var manufacturerNameRegex = regexCache.GetRegex(ManufacturerName);
+        var hardwareIdRegex = regexCache.GetRegex(HardwareId);
+
+        return deviceDescriptionRegex.NullableMatch(device.FriendlyName) &&
+            manufacturerNameRegex.NullableMatch(device.Manufacturer) &&
+            hardwareIdRegex.NullableMatch(device.HardwareIds) &&
+            (ClassGuid is not Guid guid || guid == device.ClassGuid);
+    }
+
+    public override string ToString()
+    {
+        return FriendlyName;
     }
 }

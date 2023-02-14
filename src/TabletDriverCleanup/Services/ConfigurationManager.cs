@@ -21,7 +21,7 @@ public class ConfigurationManager
 
     public bool TryGetConfiguration(string configurationName, [NotNullWhen(true)] out string? configuration)
     {
-        if ((!_state.NoCache && TryGetConfigurationOffline(configurationName, out configuration))
+        if (TryGetConfigurationOffline(configurationName, out configuration)
             || TryGetConfigurationOnline(configurationName, out configuration)
             || TryGetConfigurationInAssembly(configurationName, out configuration))
         {
@@ -35,6 +35,12 @@ public class ConfigurationManager
 
     private bool TryGetConfigurationOffline(string configurationName, [NotNullWhen(true)] out string? configuration)
     {
+        if (_state.NoCache)
+        {
+            configuration = null;
+            return false;
+        }
+
         string targetPath = Path.Join(_state.CurrentPath, "config", configurationName);
         if (!File.Exists(targetPath))
         {
@@ -56,6 +62,12 @@ public class ConfigurationManager
 
     private bool TryGetConfigurationOnline(string configurationName, [NotNullWhen(true)] out string? configuration)
     {
+        if (_state.NoUpdate)
+        {
+            configuration = null;
+            return false;
+        }
+
         string targetDir = _state.NoCache
             ? Path.Join(Path.GetTempPath(), Path.GetRandomFileName(), "config")
             : Path.Join(_state.CurrentPath, "config");

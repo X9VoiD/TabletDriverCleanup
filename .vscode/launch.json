@@ -10,10 +10,11 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/src/TabletDriverCleanup/bin/Debug/net7.0/TabletDriverCleanup.dll",
+            "program": "${workspaceFolder}/src/TabletDriverCleanup/bin/Debug/net7.0-windows/TabletDriverCleanup.dll",
             "args": [
                 "--no-prompt",
                 "--no-cache",
+                "--no-update",
                 "--dry-run"
             ],
             "cwd": "${workspaceFolder}/src/TabletDriverCleanup",
