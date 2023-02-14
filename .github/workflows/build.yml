@@ -9,7 +9,7 @@ on:
       - main
   pull_request:
     paths:
-      - src/TabletDriverCleanup
+      - src/TabletDriverCleanup/**
 
 jobs:
   windowsbuild:
