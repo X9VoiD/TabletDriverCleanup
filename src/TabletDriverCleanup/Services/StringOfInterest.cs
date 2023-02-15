@@ -26,6 +26,7 @@ public static class StringOfInterest
         "UGEE",
         "Veikk",
         "ViewSonic",
+        @"v\w*hid",
         "Wacom",
         "WinUSB",
         "XenceLabs",
