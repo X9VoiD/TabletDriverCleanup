@@ -4,12 +4,12 @@ public static class ConsoleUtility
 {
     public static PromptResult PromptYesNo(string message)
     {
-        (int Left, int Top) = Console.GetCursorPosition();
-        Console.Write($"{message} [Y/n/q] ");
-
-        var key = Console.ReadKey();
-        Console.SetCursorPosition(Left, Top);
-        ClearLine();
+        ConsoleKeyInfo key = default;
+        TemporaryPrint(() =>
+        {
+            Console.Write($"{message} [Y/n/q] ");
+            key = Console.ReadKey();
+        });
 
         return key.Key switch
         {
@@ -19,21 +19,21 @@ public static class ConsoleUtility
         };
     }
 
-    public static void ClearLine()
-    {
-        Console.Write(new string(' ', Console.BufferWidth - 1) + "\r");
-    }
-
     public static void TemporaryPrint(Action action)
     {
-        var clearString = new string(' ', Console.BufferWidth - 1) + "\n";
         (int origLeft, int origTop) = Console.GetCursorPosition();
         action();
-        int newTop = Console.CursorTop;
+        (int newLeft, int newTop) = Console.GetCursorPosition();
         Console.SetCursorPosition(origLeft, origTop);
 
-        for (int i = origTop; i < newTop + 1; i++)
-            Console.Write(clearString);
+        var width = Console.BufferWidth;
+
+        var top = width - origLeft;
+        var inbetween = width * (newTop - origTop - 1);
+        var bottom = width - (newLeft - 1);
+
+        var totalCharacters = top + inbetween + bottom;
+        Console.Write(new string(' ', totalCharacters));
 
         Console.SetCursorPosition(origLeft, origTop);
     }
