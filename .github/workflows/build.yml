@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - src/TabletDriverCleanup
+      - src/TabletDriverCleanup/**
     branches:
       - main
   pull_request:
