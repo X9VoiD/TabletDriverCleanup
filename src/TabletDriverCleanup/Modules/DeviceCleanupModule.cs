@@ -75,8 +75,6 @@ public class DeviceCleanupModule : BaseCleanupModule<Device, DeviceToUninstall>
         if (deviceInfoSet.IsInvalid)
             throw new Win32Exception();
 
-        var guid = device.ClassGuid;
-
         SP_DEVINFO_DATA deviceInfoData = new()
         {
             cbSize = (uint)Unsafe.SizeOf<SP_DEVINFO_DATA>()

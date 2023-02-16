@@ -5,9 +5,44 @@
     "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
   },
   {
-    "FriendlyName": "Serial over USB (libwdi)",
-    "OriginalName": ".*",
-    "ProviderName": "libwdi",
+    "FriendlyName": "EMR Virtual HID",
+    "OriginalName": "emrvhid\\.inf",
+    "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "FriendlyName": "FTDI USB Serial Converter Bus",
+    "OriginalName": "ftdibus\\.inf",
+    "ProviderName": "FTDI",
+    "ClassGuid": "36fc9e60-c465-11cf-8056-444553540000"
+  },
+  {
+    "FriendlyName": "FTDI USB Serial Port",
+    "OriginalName": "ftdiport\\.inf",
+    "ProviderName": "FTDI",
+    "ClassGuid": "4d36e978-e325-11ce-bfc1-08002be10318"
+  },
+  {
+    "FriendlyName": "Hanvon Ugee Mouse Filter",
+    "OriginalName": "hanvonugeemfilter\\.inf",
+    "ProviderName": "Hanvon Ugee Technology",
+    "ClassGuid": "4d36e96f-e325-11ce-bfc1-08002be10318"
+  },
+  {
+    "FriendlyName": "Mouse Filter",
+    "OriginalName": "^moufiltr\\.inf",
+    "ProviderName": "GENERIC",
+    "ClassGuid": "4d36e96f-e325-11ce-bfc1-08002be10318"
+  },
+  {
+    "FriendlyName": "Pen Driver",
+    "OriginalName": "^pendriver\\.inf",
+    "ProviderName": "Xenx Technology Limited",
+    "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "FriendlyName": "Silicon Labs CP210x USB to UART Bridge Driver",
+    "OriginalName": "slabvcp\\.inf",
+    "ProviderName": "Silicon Laboratories",
     "ClassGuid": "4d36e978-e325-11ce-bfc1-08002be10318"
   },
   {
@@ -35,7 +70,13 @@
     "ClassGuid": "b322bfc4-e954-11d3-827e-0080c8ef9f99"
   },
   {
-    "FriendlyName": "Veikk Virtual Device (vmulti)",
+    "FriendlyName": "USB Serial Converter (libwdi)",
+    "OriginalName": ".*",
+    "ProviderName": "libwdi",
+    "ClassGuid": "4d36e978-e325-11ce-bfc1-08002be10318"
+  },
+  {
+    "FriendlyName": "Veikk Virtual Device",
     "OriginalName": "vkdevice\\.inf",
     "ProviderName": "Veikk",
     "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
@@ -99,13 +140,13 @@
     "ClassGuid": "4d36e96f-e325-11ce-bfc1-08002be10318"
   },
   {
-    "FriendlyName": "Wacom Router (Tablet)",
+    "FriendlyName": "Wacom Router (Professional Tablets)",
     "OriginalName": "wachidrouter_pro\\.inf",
     "ProviderName": "Wacom",
     "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
   },
   {
-    "FriendlyName": "Wacom Router (Tablet)",
+    "FriendlyName": "Wacom Router (Consumer Tablets)",
     "OriginalName": "wachidrouter_con\\.inf",
     "ProviderName": "Wacom",
     "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
@@ -139,5 +180,17 @@
     "OriginalName": "winusb\\.inf",
     "ProviderName": "Huion",
     "ClassGuid": "88bae032-5a81-49f0-bc3d-a4ff138216d6"
+  },
+  {
+    "FriendlyName": "Xencelabs Tablet Driver",
+    "OriginalName": "xencelabstablet\\.inf",
+    "ProviderName": "Xencelabs Technologies",
+    "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "FriendlyName": "XP-Pen Tablet Driver",
+    "OriginalName": "xppentablet\\.inf",
+    "ProviderName": "XP[-| ]?Pen",
+    "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
   }
 ]

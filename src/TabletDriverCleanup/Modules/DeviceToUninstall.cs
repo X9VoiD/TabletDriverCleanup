@@ -10,7 +10,6 @@ public class DeviceToUninstall : IObjectToUninstall
     public string? ManufacturerName { get; }
     public string? HardwareId { get; }
     public Guid? ClassGuid { get; }
-
     public string? ReplacementDriver { get; }
     public bool RemoveDevice => ReplacementDriver == null;
 

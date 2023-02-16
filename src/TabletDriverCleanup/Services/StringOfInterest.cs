@@ -12,6 +12,8 @@ public static class StringOfInterest
         "Acepen",
         "Artisul",
         "Digitizer",
+        "EMR",
+        "filtr",
         "Gaomon",
         "Genius",
         "Huion",

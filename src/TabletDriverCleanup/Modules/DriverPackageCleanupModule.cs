@@ -79,9 +79,6 @@ public partial class DriverPackageCleanupModule : BaseCleanupModule<DriverPackag
             case DriverPackageToUninstall.Deferred:
                 run(Deferred);
                 break;
-            case DriverPackageToUninstall.InstallShield:
-                run(InstallShield);
-                break;
             case DriverPackageToUninstall.RegistryOnly:
                 RegistryOnly(dp);
                 break;
@@ -163,43 +160,6 @@ public partial class DriverPackageCleanupModule : BaseCleanupModule<DriverPackag
     }
 
     private static Task Deferred(ProgramState state, DriverPackage dp, DriverPackageToUninstall dpu, CancellationToken token)
-    {
-        return Task.Run(async () =>
-        {
-            await StartProcess(dp.UninstallString!)!.WaitForExitAsync(token);
-            await Task.Delay(TimeSpan.FromSeconds(0.5), token);
-            await waitForDelegation(dp, dpu, token);
-        }, token);
-
-        static async Task waitForDelegation(DriverPackage dp, DriverPackageToUninstall dpu, CancellationToken token)
-        {
-            Process? delegation = null;
-            dp.UninstallString!.ExtractToArgs(out var command, out _);
-            var targetDir = Path.GetDirectoryName(command)!;
-
-            foreach (var process in Process.GetProcesses())
-            {
-                if (process.ProcessName.Contains("Uninstall", StringComparison.OrdinalIgnoreCase))
-                {
-                    var commandLine = GetCommandLine(process);
-                    if (commandLine is null) continue;
-
-                    if (commandLine.Contains(targetDir))
-                    {
-                        delegation = process;
-                        break;
-                    }
-                }
-            }
-
-            if (delegation is null)
-                return;
-
-            await delegation.WaitForExitAsync(token);
-        }
-    }
-
-    private static Task InstallShield(ProgramState state, DriverPackage dp, DriverPackageToUninstall dpu, CancellationToken token)
     {
         return Task.Run(async () =>
         {

@@ -26,11 +26,6 @@ public class DriverPackageToUninstall : IObjectToUninstall
     public const string Deferred = "deferred";
 
     /// <summary>
-    /// The uninstaller is InstallShield.
-    /// </summary>
-    public const string InstallShield = "installshield";
-
-    /// <summary>
     /// Use this only if the uninstallation is already handled by other cleanup modules.
     /// </summary>
     public const string RegistryOnly = "registry_only";

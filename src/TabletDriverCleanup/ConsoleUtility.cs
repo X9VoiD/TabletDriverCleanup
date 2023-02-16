@@ -26,10 +26,16 @@ public static class ConsoleUtility
 
     public static void TemporaryPrint(Action action)
     {
-        (int Left, int Top) = Console.GetCursorPosition();
+        var clearString = new string(' ', Console.BufferWidth - 1) + "\n";
+        (int origLeft, int origTop) = Console.GetCursorPosition();
         action();
-        Console.SetCursorPosition(Left, Top);
-        ClearLine();
+        int newTop = Console.CursorTop;
+        Console.SetCursorPosition(origLeft, origTop);
+
+        for (int i = origTop; i < newTop + 1; i++)
+            Console.Write(clearString);
+
+        Console.SetCursorPosition(origLeft, origTop);
     }
 
     public static async Task<ConsoleKeyInfo?> ReadKeyAsync(CancellationToken ct = default)
