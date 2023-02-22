@@ -122,6 +122,30 @@
     "ClassGuid": "3f966bd9-fa04-4ec5-991c-d326973b5128"
   },
   {
+    "FriendlyName": "Wacom HID Filter",
+    "OriginalName": "wacomhidfilter\\.inf",
+    "ProviderName": "Wacom",
+    "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "FriendlyName": "Wacom ISD Minidriver",
+    "OriginalName": "wisdpen\\.inf",
+    "ProviderName": "Wacom",
+    "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "FriendlyName": "Wacom Mouse Filter",
+    "OriginalName": "wacommousefilter\\.inf",
+    "ProviderName": "Wacom",
+    "ClassGuid": "4d36e96f-e325-11ce-bfc1-08002be10318"
+  },
+  {
+    "FriendlyName": "Wacom Mouse Monitor",
+    "OriginalName": "wacmoumonitor\\.inf",
+    "ProviderName": "Wacom",
+    "ClassGuid": "4d36e96f-e325-11ce-bfc1-08002be10318"
+  },
+  {
     "FriendlyName": "Wacom MultiTouch Driver",
     "OriginalName": "wacmultitouch\\.inf",
     "ProviderName": "Wacom",
@@ -148,6 +172,12 @@
   {
     "FriendlyName": "Wacom Router (Consumer Tablets)",
     "OriginalName": "wachidrouter_con\\.inf",
+    "ProviderName": "Wacom",
+    "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "FriendlyName": "Wacom Virtual HID",
+    "OriginalName": "WacomVHid\\.inf",
     "ProviderName": "Wacom",
     "ClassGuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
   },

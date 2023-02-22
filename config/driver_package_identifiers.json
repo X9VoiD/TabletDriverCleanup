@@ -6,6 +6,13 @@
     "DisplayVersion": "^16"
   },
   {
+    "FriendlyName": "Bamboo",
+    "UninstallMethod": "normal",
+    "DisplayName": "Bamboo",
+    "DisplayVersion": "^5",
+    "Publisher": "Wacom"
+  },
+  {
     "FriendlyName": "Digitizer Panel",
     "UninstallMethod": "deferred",
     "DisplayName": "DigitizerPanel",
@@ -118,6 +125,24 @@
     "UninstallMethod": "normal",
     "DisplayName": "Wacom Tablet",
     "DisplayVersion": "^6.4"
+  },
+  {
+    "FriendlyName": "Wacom WebTablet IE Plugin",
+    "UninstallMethod": "normal",
+    "DisplayName": "WebTablet IE Plugin",
+    "DisplayVersion": "^1"
+  },
+  {
+    "FriendlyName": "Wacom WebTablet FB Plugin",
+    "UninstallMethod": "normal",
+    "DisplayName": "WebTablet FB Plugin",
+    "DisplayVersion": "^2"
+  },
+  {
+    "FriendlyName": "Wacom WebTablet Netscape Plugin",
+    "UninstallMethod": "normal",
+    "DisplayName": "WebTablet Netscape Plugin",
+    "DisplayVersion": "^1"
   },
   {
     "FriendlyName": "Windows Driver Package - Graphics Tablet (WinUsb) USBDevice",
