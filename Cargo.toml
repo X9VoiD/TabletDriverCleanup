@@ -1,0 +1,39 @@
+[package]
+name = "tabletdrivercleanup"
+version = "0.1.0"
+edition = "2021"
+
+[profile.release]
+strip = true
+
+[dependencies]
+async-trait = "0.1"
+clap = { version = "4.1", features = [ "cargo", "string" ] }
+crossterm = "0.26"
+include_dir = "0.7"
+lazy_static = "1.4"
+regex = "1.7"
+reqwest = { version = "0.11", features = [ "blocking" ] }
+serde = { version = "1.0", features = [ "derive" ] }
+serde_json = "1.0"
+sysinfo = "0.28"
+terminal_size = "0.2"
+tokio = { version = "1.25", features = [ "full" ] }
+tokio-util = "0.7"
+uuid = { version = "1.3", features = ["serde"] }
+winreg = "0.11"
+wmi = "0.12"
+log = "0.4.17"
+error-stack = "0.3.1"
+thiserror = "1.0.39"
+
+[dependencies.windows]
+version = "0.44"
+features = [
+    "Win32_Devices_DeviceAndDriverInstallation",
+    "Win32_Devices_Properties",
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_System_Diagnostics_Debug",
+    "Win32_System_Threading"
+]

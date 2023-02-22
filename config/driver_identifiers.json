@@ -1,0 +1,226 @@
+[
+  {
+    "friendly_name": "AcePen Art Filter Device",
+    "original_name": "artfiltr_digitizer_upin\\.inf",
+    "class": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "friendly_name": "EMR Virtual HID",
+    "original_name": "emrvhid\\.inf",
+    "class": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "friendly_name": "FTDI USB Serial Converter Bus",
+    "original_name": "ftdibus\\.inf",
+    "provider": "FTDI",
+    "class": "36fc9e60-c465-11cf-8056-444553540000"
+  },
+  {
+    "friendly_name": "FTDI USB Serial Port",
+    "original_name": "ftdiport\\.inf",
+    "provider": "FTDI",
+    "class": "4d36e978-e325-11ce-bfc1-08002be10318"
+  },
+  {
+    "friendly_name": "Hanvon Ugee Mouse Filter",
+    "original_name": "hanvonugeemfilter\\.inf",
+    "provider": "Hanvon Ugee Technology",
+    "class": "4d36e96f-e325-11ce-bfc1-08002be10318"
+  },
+  {
+    "friendly_name": "Mouse Filter",
+    "original_name": "^moufiltr\\.inf",
+    "provider": "GENERIC",
+    "class": "4d36e96f-e325-11ce-bfc1-08002be10318"
+  },
+  {
+    "friendly_name": "Pen Driver",
+    "original_name": "^pendriver\\.inf",
+    "provider": "Xenx Technology Limited",
+    "class": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "friendly_name": "Silicon Labs CP210x USB to UART Bridge Driver",
+    "original_name": "slabvcp\\.inf",
+    "provider": "Silicon Laboratories",
+    "class": "4d36e978-e325-11ce-bfc1-08002be10318"
+  },
+  {
+    "friendly_name": "Tablet Device",
+    "original_name": "inkdevice\\.inf",
+    "provider": "Tablet\\.Inc",
+    "class": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "friendly_name": "UCLogic Simulator Bus Enumerator",
+    "original_name": "PTSimBus\\.inf",
+    "provider": "PenTablet",
+    "class": "4d36e97d-e325-11ce-bfc1-08002be10318"
+  },
+  {
+    "friendly_name": "UCLogic Simulated PenTablet HID",
+    "original_name": "PTSimHid\\.inf",
+    "provider": "PenTablet",
+    "class": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "friendly_name": "UCLogic Tablet2K",
+    "original_name": "Tablet2k\\.inf",
+    "provider": "PenTablet",
+    "class": "b322bfc4-e954-11d3-827e-0080c8ef9f99"
+  },
+  {
+    "friendly_name": "USB Serial Converter (libwdi)",
+    "original_name": ".*",
+    "provider": "libwdi",
+    "class": "4d36e978-e325-11ce-bfc1-08002be10318"
+  },
+  {
+    "friendly_name": "Veikk Virtual Device",
+    "original_name": "vkdevice\\.inf",
+    "provider": "Veikk",
+    "class": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "friendly_name": "Veikk WinUSB Device",
+    "original_name": "usbtabletdevice\\.inf",
+    "provider": "Veikk",
+    "class": "108d8180-d429-450b-afa4-ac19039fc96f"
+  },
+  {
+    "friendly_name": "VHidDevice",
+    "original_name": "vpdhid_\\w{4}\\.inf",
+    "class": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "friendly_name": "VHidDevice Mouse Filter",
+    "original_name": "vpdhid_\\w{4}_moufiltr\\.inf",
+    "class": "4d36e96f-e325-11ce-bfc1-08002be10318"
+  },
+  {
+    "friendly_name": "VMulti",
+    "original_name": "vmulti\\.inf",
+    "provider": "Pentablet ?HID",
+    "class": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "friendly_name": "VMulti (Gaomon)",
+    "original_name": "vmulti\\.inf",
+    "provider": "Gaomon",
+    "class": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "friendly_name": "VMulti (Huion)",
+    "original_name": "vmulti\\.inf",
+    "provider": "Huion",
+    "class": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "friendly_name": "Wacom Android Debug Bridge (ADB) Driver",
+    "original_name": "android_winusb\\.inf",
+    "provider": "Wacom",
+    "class": "3f966bd9-fa04-4ec5-991c-d326973b5128"
+  },
+  {
+    "friendly_name": "Wacom HID Filter",
+    "original_name": "wacomhidfilter\\.inf",
+    "provider": "Wacom",
+    "class": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "friendly_name": "Wacom ISD Minidriver",
+    "original_name": "wisdpen\\.inf",
+    "provider": "Wacom",
+    "class": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "friendly_name": "Wacom Mouse Filter",
+    "original_name": "wacommousefilter\\.inf",
+    "provider": "Wacom",
+    "class": "4d36e96f-e325-11ce-bfc1-08002be10318"
+  },
+  {
+    "friendly_name": "Wacom Mouse Monitor",
+    "original_name": "wacmoumonitor\\.inf",
+    "provider": "Wacom",
+    "class": "4d36e96f-e325-11ce-bfc1-08002be10318"
+  },
+  {
+    "friendly_name": "Wacom MultiTouch Driver",
+    "original_name": "wacmultitouch\\.inf",
+    "provider": "Wacom",
+    "class": "6d3963a7-0f27-4d42-a63b-671f74fbddc9"
+  },
+  {
+    "friendly_name": "Wacom Paper",
+    "original_name": "wacpaper\\.inf",
+    "provider": "Wacom",
+    "class": "88bae032-5a81-49f0-bc3d-a4ff138216d6"
+  },
+  {
+    "friendly_name": "Wacom Router (Mouse)",
+    "original_name": "wacomrouterfilter\\.inf",
+    "provider": "Wacom Technology",
+    "class": "4d36e96f-e325-11ce-bfc1-08002be10318"
+  },
+  {
+    "friendly_name": "Wacom Router (Professional Tablets)",
+    "original_name": "wachidrouter_pro\\.inf",
+    "provider": "Wacom",
+    "class": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "friendly_name": "Wacom Router (Consumer Tablets)",
+    "original_name": "wachidrouter_con\\.inf",
+    "provider": "Wacom",
+    "class": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "friendly_name": "Wacom Virtual HID",
+    "original_name": "WacomVHid\\.inf",
+    "provider": "Wacom",
+    "class": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "friendly_name": "Wacom WUSD",
+    "original_name": "wacom_wusd\\.inf",
+    "provider": "Wacom Technology",
+    "class": "88bae032-5a81-49f0-bc3d-a4ff138216d6"
+  },
+  {
+    "friendly_name": "WinUSB (libwdi)",
+    "original_name": ".*",
+    "provider": "libwdi",
+    "class": "88bae032-5a81-49f0-bc3d-a4ff138216d6"
+  },
+  {
+    "friendly_name": "WinUSB (Gaomon)",
+    "original_name": "winusb\\.inf",
+    "provider": "Gaomon",
+    "class": "88bae032-5a81-49f0-bc3d-a4ff138216d6"
+  },
+  {
+    "friendly_name": "WinUSB (Hawku/Huion)",
+    "original_name": "tabletdriver\\.inf",
+    "provider": "Graphics ?Tablet",
+    "class": "88bae032-5a81-49f0-bc3d-a4ff138216d6"
+  },
+  {
+    "friendly_name": "WinUSB (Huion)",
+    "original_name": "winusb\\.inf",
+    "provider": "Huion",
+    "class": "88bae032-5a81-49f0-bc3d-a4ff138216d6"
+  },
+  {
+    "friendly_name": "Xencelabs Tablet Driver",
+    "original_name": "xencelabstablet\\.inf",
+    "provider": "Xencelabs Technologies",
+    "class": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "friendly_name": "XP-Pen Tablet Driver",
+    "original_name": "xppentablet\\.inf",
+    "provider": "XP[-| ]?Pen",
+    "class": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  }
+]

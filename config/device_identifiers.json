@@ -1,0 +1,19 @@
+[
+  {
+    "friendly_name": "VHidDevice",
+    "device_desc": "Vpd Hid_\\w{4} Mini Device",
+    "class_uuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "friendly_name": "VMulti Device",
+    "device_desc": "Pentablet ?HID",
+    "manufacturer": "Pentablet ?HID",
+    "hardware_id": "pentablet\\\\hid",
+    "class_uuid": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
+    "friendly_name": "Wacom Driver Downloader",
+    "device_desc": "Wacom Driver Downloader",
+    "manufacturer": "Wacom Technology"
+  }
+]
