@@ -1,11 +1,14 @@
 using System.Collections.Immutable;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Management;
+using System.Runtime.ExceptionServices;
 using System.Runtime.Versioning;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Win32;
 using TabletDriverCleanup.Services;
+using Vanara.PInvoke;
 
 namespace TabletDriverCleanup.Modules;
 
@@ -71,19 +74,29 @@ public partial class DriverPackageCleanupModule : BaseCleanupModule<DriverPackag
 
     protected override void UninstallObject(ProgramState state, DriverPackage dp, DriverPackageToUninstall dpu)
     {
-        switch (dpu.UninstallMethod)
+        try
         {
-            case DriverPackageToUninstall.Normal:
-                run(Normal);
-                break;
-            case DriverPackageToUninstall.Deferred:
-                run(Deferred);
-                break;
-            case DriverPackageToUninstall.RegistryOnly:
-                RegistryOnly(dp);
-                break;
-            default:
-                throw new NotSupportedException($"Uninstall method '{dpu.UninstallMethod}' is not supported");
+            switch (dpu.UninstallMethod)
+            {
+                case DriverPackageToUninstall.Normal:
+                    run(Normal);
+                    break;
+                case DriverPackageToUninstall.Deferred:
+                    run(Deferred);
+                    break;
+                case DriverPackageToUninstall.RegistryOnly:
+                    RegistryOnly(dp);
+                    break;
+                default:
+                    throw new NotSupportedException($"Uninstall method '{dpu.UninstallMethod}' is not supported");
+            }
+        }
+        catch (AggregateException ex)
+        {
+            if (ex.InnerExceptions.Count == 1)
+            {
+                ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
+            }
         }
 
         void run(Func<ProgramState, DriverPackage, DriverPackageToUninstall, CancellationToken, Task> action)
@@ -101,11 +114,11 @@ public partial class DriverPackageCleanupModule : BaseCleanupModule<DriverPackag
                 ConsoleUtility.TemporaryPrint(() =>
                 {
                     var i = Task.WaitAny(tasks);
+                    cts.Cancel();
                     if (tasks[i].IsFaulted)
                     {
                         throw tasks[i].Exception!;
                     }
-                    cts.Cancel();
                 });
             }
             else
@@ -220,8 +233,15 @@ public partial class DriverPackageCleanupModule : BaseCleanupModule<DriverPackag
         }
         catch
         {
-            processStartInfo = str.ToProcessStartInfo(workaroundMissingQuote: true);
-            return Process.Start(processStartInfo)!;
+            try
+            {
+                processStartInfo = str.ToProcessStartInfo(workaroundMissingQuote: true);
+                return Process.Start(processStartInfo)!;
+            }
+            catch (Win32Exception e) when (e.NativeErrorCode == Win32Error.ERROR_FILE_NOT_FOUND)
+            {
+                throw new AlreadyUninstalledException();
+            }
         }
     }
 }

@@ -48,7 +48,16 @@ public abstract class BaseCleanupModule<TObject, TObjectToUninstall> : ICleanupM
             Console.WriteLine($"Uninstalling '{objectToUninstall}'...");
 
             if (!state.DryRun)
-                UninstallObject(state, @object, objectToUninstall);
+            {
+                try
+                {
+                    UninstallObject(state, @object, objectToUninstall);
+                }
+                catch (AlreadyUninstalledException)
+                {
+                    Console.WriteLine($"  '{objectToUninstall}' is already uninstalled by a previous uninstaller.");
+                }
+            }
         }
 
         if (!found)
@@ -85,4 +94,8 @@ public abstract class BaseCleanupModule<TObject, TObjectToUninstall> : ICleanupM
     protected abstract IEnumerable<TObject> GetObjects(ProgramState state);
     protected abstract ImmutableArray<TObjectToUninstall> GetObjectsToUninstall(ProgramState state);
     protected abstract void UninstallObject(ProgramState state, TObject @object, TObjectToUninstall objectToUninstall);
+
+    protected class AlreadyUninstalledException : Exception
+    {
+    }
 }

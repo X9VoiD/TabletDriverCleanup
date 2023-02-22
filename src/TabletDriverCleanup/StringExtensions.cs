@@ -111,6 +111,6 @@ public static partial class StringExtensions
 
     public static Regex ToRegex(this string str) => new(str);
 
-    [GeneratedRegex(@"(?<command>.+?\.exe) (?<args>.*)")]
+    [GeneratedRegex("(?<start>\"?)(?<command>.*?\\.[a-zA-Z]{3})\\k<start>(?: (?<args>.*)?)?")]
     private static partial Regex ExeRegex();
 }

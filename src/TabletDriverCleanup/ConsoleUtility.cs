@@ -22,20 +22,27 @@ public static class ConsoleUtility
     public static void TemporaryPrint(Action action)
     {
         (int origLeft, int origTop) = Console.GetCursorPosition();
-        action();
-        (int newLeft, int newTop) = Console.GetCursorPosition();
-        Console.SetCursorPosition(origLeft, origTop);
 
-        var width = Console.BufferWidth;
+        try
+        {
+            action();
+        }
+        finally
+        {
+            (int newLeft, int newTop) = Console.GetCursorPosition();
+            Console.SetCursorPosition(origLeft, origTop);
 
-        var top = width - origLeft;
-        var inbetween = width * (newTop - origTop - 1);
-        var bottom = width - (newLeft - 1);
+            var width = Console.BufferWidth;
 
-        var totalCharacters = top + inbetween + bottom;
-        Console.Write(new string(' ', totalCharacters));
+            var top = width - origLeft;
+            var inbetween = width * (newTop - origTop - 1);
+            var bottom = width - (newLeft - 1);
 
-        Console.SetCursorPosition(origLeft, origTop);
+            var totalCharacters = top + inbetween + bottom;
+            Console.Write(new string(' ', totalCharacters));
+
+            Console.SetCursorPosition(origLeft, origTop);
+        }
     }
 
     public static async Task<ConsoleKeyInfo?> ReadKeyAsync(CancellationToken ct = default)
