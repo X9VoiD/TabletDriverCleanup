@@ -187,7 +187,7 @@ public static partial class Enumerator
         if (!SetupGetInfDriverStoreLocation(infName, 0, null, null, 0, out uint size))
         {
             var ret = (uint)Marshal.GetLastWin32Error();
-            if (ret == Win32Error.ERROR_NOT_FOUND)
+            if (ret == Win32Error.ERROR_NOT_FOUND || ret == Win32Error.ERROR_FILE_NOT_FOUND)
                 return null;
             if (ret != Win32Error.ERROR_INSUFFICIENT_BUFFER)
                 throw new Win32Exception();
