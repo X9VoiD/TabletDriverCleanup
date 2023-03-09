@@ -51,7 +51,7 @@ impl ModuleMetadata for DriverCleanupModule {
     }
 
     fn help(&self) -> &str {
-        "uninstalls device drivers from the system"
+        "uninstall device drivers from the system"
     }
 
     fn noun(&self) -> &str {

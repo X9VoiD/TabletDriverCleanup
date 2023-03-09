@@ -78,8 +78,7 @@ fn configure_command(module: &dyn Module, command: Command) -> Command {
             .long(format!("no-{}", module.cli_name()))
             .action(ArgAction::SetFalse)
             .help(format!(
-                "Disables \"{}\" - a module that {}",
-                module.name(),
+                "Do not {}",
                 module.help()
             )),
     )

@@ -49,7 +49,7 @@ impl ModuleMetadata for DeviceCleanupModule {
     }
 
     fn help(&self) -> &str {
-        "removes devices from the system"
+        "remove devices from the system"
     }
 
     fn noun(&self) -> &str {
