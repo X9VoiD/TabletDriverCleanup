@@ -147,12 +147,12 @@
   {
     "friendly_name": "Windows Driver Package - Graphics Tablet (WinUsb) USBDevice",
     "uninstall_method": "RegistryOnly",
-    "display_name": "Windows Driver Package - Graphics Tablet \\(WinUsb\\) USBDevice"
+    "display_name": "Graphics Tablet \\(WinUsb\\) USBDevice"
   },
   {
     "friendly_name": "Windows Driver Package - Veikk (WinUsb) USBVeikk",
     "uninstall_method": "RegistryOnly",
-    "display_name": "Windows Driver Package - Veikk \\(WinUsb\\) USBVeikk"
+    "display_name": "Veikk \\(WinUsb\\) USBVeikk"
   },
   {
     "friendly_name": "Xencelabs v1.1",
