@@ -4,6 +4,7 @@ use clap::ArgMatches;
 use cleanup_modules::Module;
 use crossterm::{event::KeyCode, style::Stylize};
 
+use error_stack::{fmt::ColorMode, Report};
 use thiserror::Error;
 
 use crate::services::terminal::{read_key_async, WaitResult};
@@ -215,4 +216,10 @@ pub fn parse_to_config(modules: Vec<Box<dyn Module>>, matches: ArgMatches) -> Co
     }
 
     builder.build()
+}
+
+fn no_color(action: impl FnOnce()) {
+    Report::set_color_mode(ColorMode::None);
+    action();
+    Report::set_color_mode(ColorMode::default());
 }

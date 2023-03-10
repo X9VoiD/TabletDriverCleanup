@@ -12,7 +12,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use serde::Deserialize;
 use tokio_util::sync::CancellationToken;
-use winreg::{RegKey, enums::HKEY_LOCAL_MACHINE};
+use winreg::{enums::HKEY_LOCAL_MACHINE, RegKey};
 use wmi::{COMLibrary, WMIConnection, WMIError};
 
 use super::{
@@ -99,15 +99,11 @@ impl ModuleStrategy for DriverPackageCleanupModule {
         use UninstallMethod::*;
 
         match &to_uninstall.uninstall_method {
-            Normal => {
-                run_uninstall_method(uninstall_normal, state, &object, to_uninstall).await
-            }
+            Normal => run_uninstall_method(uninstall_normal, state, &object, to_uninstall).await,
             Deferred => {
                 run_uninstall_method(uninstall_deferred, state, &object, to_uninstall).await
             }
-            RegistryOnly => {
-                uninstall_registry_only(object, to_uninstall)
-            },
+            RegistryOnly => uninstall_registry_only(object, to_uninstall),
         }
     }
 
@@ -116,7 +112,10 @@ impl ModuleStrategy for DriverPackageCleanupModule {
     }
 }
 
-fn uninstall_registry_only(object: DriverPackage, to_uninstall: &DriverPackageToUninstall) -> Result<(), UninstallError> {
+fn uninstall_registry_only(
+    object: DriverPackage,
+    to_uninstall: &DriverPackageToUninstall,
+) -> Result<(), UninstallError> {
     let base_key_name = if object.x86() {
         "SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall"
     } else {
@@ -135,7 +134,8 @@ fn uninstall_registry_only(object: DriverPackage, to_uninstall: &DriverPackageTo
             )
         })?;
 
-    uninstall_key.delete_subkey_all(Path::new(object.key_name()))
+    uninstall_key
+        .delete_subkey_all(Path::new(object.key_name()))
         .into_report()
         .change_context(UninstallError::UninstallFailed)
         .attach_printable_lazy(|| {

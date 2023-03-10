@@ -1,8 +1,17 @@
 use clap::{command, Arg, ArgAction, Command};
 use tabletdrivercleanup::{cleanup_modules::*, *};
 
+use simplelog::{self, WriteLogger};
+
 #[tokio::main]
 async fn main() {
+    WriteLogger::init(
+        simplelog::LevelFilter::Info,
+        simplelog::Config::default(),
+        std::fs::File::create("log.txt").unwrap(),
+    )
+    .unwrap();
+
     let modules: Vec<Box<dyn Module>> = vec![
         Box::new(DriverPackageCleanupModule::new()),
         Box::new(DeviceCleanupModule::new()),
@@ -77,9 +86,6 @@ fn configure_command(module: &dyn Module, command: Command) -> Command {
         Arg::new(module.cli_name().to_string())
             .long(format!("no-{}", module.cli_name()))
             .action(ArgAction::SetFalse)
-            .help(format!(
-                "Do not {}",
-                module.help()
-            )),
+            .help(format!("Do not {}", module.help())),
     )
 }
