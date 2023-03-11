@@ -38,25 +38,6 @@ lazy_static! {
         create_map(&["android", "logitech",]);
 }
 
-fn create_map(interests: &[&'static str]) -> HashMap<&'static str, Regex> {
-    let mut map = HashMap::new();
-    for interest in interests {
-        add_interest(&mut map, interest);
-    }
-
-    map
-}
-
-fn add_interest(map: &mut HashMap<&'static str, Regex>, string: &'static str) {
-    map.insert(
-        string,
-        RegexBuilder::new(string)
-            .case_insensitive(true)
-            .build()
-            .unwrap(),
-    );
-}
-
 pub fn is_of_interest(string: Option<&str>) -> bool {
     let string = match string {
         Some(string) => string,
@@ -79,4 +60,23 @@ pub fn is_of_interest(string: Option<&str>) -> bool {
 
 pub fn is_of_interest_iter<'a>(mut strings: impl Iterator<Item = &'a str>) -> bool {
     strings.any(|string| is_of_interest(Some(string)))
+}
+
+fn create_map(interests: &[&'static str]) -> HashMap<&'static str, Regex> {
+    let mut map = HashMap::new();
+    for interest in interests {
+        add_interest(&mut map, interest);
+    }
+
+    map
+}
+
+fn add_interest(map: &mut HashMap<&'static str, Regex>, string: &'static str) {
+    map.insert(
+        string,
+        RegexBuilder::new(string)
+            .case_insensitive(true)
+            .build()
+            .unwrap(),
+    );
 }

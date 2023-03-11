@@ -1,16 +1,16 @@
+pub mod cleanup_modules;
+pub(crate) mod services;
+
 use std::path::PathBuf;
 
 use clap::ArgMatches;
 use cleanup_modules::Module;
-use crossterm::{event::KeyCode, style::Stylize};
-
-use error_stack::{fmt::ColorMode, Report};
-use thiserror::Error;
+use crossterm::event::KeyCode;
+use crossterm::style::Stylize;
+use error_stack::fmt::ColorMode;
+use error_stack::Report;
 
 use crate::services::terminal::{read_key_async, WaitResult};
-
-pub mod cleanup_modules;
-mod services;
 
 pub mod constants {
     pub const CLI_NAME: &str = "TabletDriverCleanup";
@@ -21,13 +21,13 @@ pub mod constants {
     pub const ALLOW_UPDATES: &str = "allow_updates";
 }
 
+pub type ModuleCollection = Vec<Box<dyn Module>>;
+
 #[derive(Debug)]
 pub enum Mode {
     Run,
     Dump,
 }
-
-type ModuleCollection = Vec<Box<dyn Module>>;
 
 #[derive(Default)]
 pub struct Config {
@@ -93,10 +93,6 @@ impl ConfigBuilder {
 struct RunState {
     pub need_reboot: bool,
 }
-
-#[derive(Debug, Error)]
-#[error("failed to run module to completion")]
-pub struct ModuleRunError {}
 
 pub async fn run(config: Config) {
     print_header();

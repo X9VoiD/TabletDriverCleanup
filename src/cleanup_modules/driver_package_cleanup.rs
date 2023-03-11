@@ -1,10 +1,8 @@
 use core::result::Result as CResult;
-use std::{
-    future::Future,
-    io::{ErrorKind, Write},
-    path::Path,
-    process::{Child, ExitStatus},
-};
+use std::future::Future;
+use std::io::{ErrorKind, Write};
+use std::path::Path;
+use std::process::{Child, ExitStatus};
 
 use async_trait::async_trait;
 use error_stack::{bail, IntoReport, Result, ResultExt};
@@ -12,25 +10,29 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use serde::Deserialize;
 use tokio_util::sync::CancellationToken;
-use winreg::{enums::HKEY_LOCAL_MACHINE, RegKey};
+use winreg::enums::HKEY_LOCAL_MACHINE;
+use winreg::RegKey;
 use wmi::{COMLibrary, WMIConnection, WMIError};
 
-use super::{
-    create_dump_file, Dumper, IntoModuleReport, IntoUninstallReport, ModuleError, ModuleMetadata,
-    ModuleRunInfo, ModuleStrategy, ToUninstall, UninstallError,
-};
-use crate::{
-    cleanup_modules::get_path_to_dump,
-    services::{
-        self, identifiers, regex_cache, terminal,
-        windows::{enumerate_driver_packages, DriverPackage},
-    },
-    State,
-};
+use super::*;
+
+use crate::services;
+use crate::services::identifiers;
+use crate::services::regex_cache;
+use crate::services::terminal;
+use crate::services::windows::{enumerate_driver_packages, DriverPackage};
+use crate::State;
 
 const MODULE_NAME: &str = "Driver Package Cleanup";
 const MODULE_CLI: &str = "driver-package-cleanup";
 const IDENTIFIER: &str = "driver_package_identifiers.json";
+
+#[derive(Deserialize, Debug)]
+enum UninstallMethod {
+    Normal,
+    Deferred,
+    RegistryOnly,
+}
 
 #[derive(Default)]
 pub struct DriverPackageCleanupModule {
@@ -68,7 +70,6 @@ impl ModuleStrategy for DriverPackageCleanupModule {
     type ToUninstall = DriverPackageToUninstall;
 
     async fn initialize(&mut self, state: &State) -> Result<(), ModuleError> {
-        let _name = self.name().to_string();
         let resource = identifiers::get_resource(IDENTIFIER, state)
             .await
             .into_module_report(MODULE_NAME)?;
@@ -119,26 +120,28 @@ impl ModuleStrategy for DriverPackageCleanupModule {
     }
 }
 
-fn uninstall_registry_only(
-    object: DriverPackage,
-    to_uninstall: &DriverPackageToUninstall,
-) -> Result<(), UninstallError> {
-    let key_path = Path::new(object.key_name());
-    let key_parent = key_path.parent().unwrap();
-    let key_name = key_path.file_name().unwrap();
-    let flags = winreg::enums::KEY_WRITE;
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct DriverPackageToUninstall {
+    friendly_name: String,
+    display_name: Option<String>,
+    display_version: Option<String>,
+    publisher: Option<String>,
+    uninstall_method: UninstallMethod,
+}
 
-    let uninstall_key = RegKey::predef(HKEY_LOCAL_MACHINE)
-        .open_subkey_with_flags(key_parent, flags)
-        .into_report()
-        .attach_printable_lazy(|| key_parent.to_string_lossy().to_string())
-        .into_uninstall_report(to_uninstall)?;
+impl ToUninstall<DriverPackage> for DriverPackageToUninstall {
+    fn matches(&self, other: &DriverPackage) -> bool {
+        regex_cache::cached_match(other.display_name(), self.display_name.as_deref())
+            && regex_cache::cached_match(other.display_version(), self.display_version.as_deref())
+            && regex_cache::cached_match(other.publisher(), self.publisher.as_deref())
+    }
+}
 
-    uninstall_key
-        .delete_subkey_all(key_name)
-        .into_report()
-        .attach_printable_lazy(|| key_path.to_string_lossy().to_string())
-        .into_uninstall_report(to_uninstall)
+impl std::fmt::Display for DriverPackageToUninstall {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.friendly_name)
+    }
 }
 
 #[derive(Default)]
@@ -176,6 +179,22 @@ impl Dumper for DriverPackageDumper {
         }
 
         Ok(())
+    }
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename = "Win32_Process")]
+#[serde(rename_all = "PascalCase")]
+struct ProcessInfo {
+    process_id: u32,
+    parent_process_id: u32,
+    command_line: Option<String>,
+}
+
+impl ProcessInfo {
+    fn query() -> CResult<Vec<Self>, WMIError> {
+        let wmi_con = WMIConnection::new(COMLibrary::new()?)?;
+        wmi_con.query()
     }
 }
 
@@ -287,7 +306,7 @@ async fn uninstall_deferred(
 
     tokio::time::sleep(std::time::Duration::from_secs_f32(0.5)).await;
 
-    let processes = get_process_infos().unwrap();
+    let processes = ProcessInfo::query().unwrap();
     let process_delegate = processes
         .iter()
         .filter(|p| p.parent_process_id == id)
@@ -353,49 +372,26 @@ async fn wait_for_process_async(child: Child) -> CResult<ExitStatus, std::io::Er
     .unwrap()
 }
 
-#[derive(Deserialize, Debug)]
-enum UninstallMethod {
-    Normal,
-    Deferred,
-    RegistryOnly,
-}
+fn uninstall_registry_only(
+    object: DriverPackage,
+    to_uninstall: &DriverPackageToUninstall,
+) -> Result<(), UninstallError> {
+    let key_path = Path::new(object.key_name());
+    let key_parent = key_path.parent().unwrap();
+    let key_name = key_path.file_name().unwrap();
+    let flags = winreg::enums::KEY_WRITE;
 
-#[derive(Deserialize, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct DriverPackageToUninstall {
-    friendly_name: String,
-    display_name: Option<String>,
-    display_version: Option<String>,
-    publisher: Option<String>,
-    uninstall_method: UninstallMethod,
-}
+    let uninstall_key = RegKey::predef(HKEY_LOCAL_MACHINE)
+        .open_subkey_with_flags(key_parent, flags)
+        .into_report()
+        .attach_printable_lazy(|| key_parent.to_string_lossy().to_string())
+        .into_uninstall_report(to_uninstall)?;
 
-impl ToUninstall<DriverPackage> for DriverPackageToUninstall {
-    fn matches(&self, other: &DriverPackage) -> bool {
-        regex_cache::cached_match(other.display_name(), self.display_name.as_deref())
-            && regex_cache::cached_match(other.display_version(), self.display_version.as_deref())
-            && regex_cache::cached_match(other.publisher(), self.publisher.as_deref())
-    }
-}
-
-impl std::fmt::Display for DriverPackageToUninstall {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.friendly_name)
-    }
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename = "Win32_Process")]
-#[serde(rename_all = "PascalCase")]
-struct ProcessInfo {
-    process_id: u32,
-    parent_process_id: u32,
-    command_line: Option<String>,
-}
-
-fn get_process_infos() -> CResult<Vec<ProcessInfo>, WMIError> {
-    let wmi_con = WMIConnection::new(COMLibrary::new()?)?;
-    wmi_con.query()
+    uninstall_key
+        .delete_subkey_all(key_name)
+        .into_report()
+        .attach_printable_lazy(|| key_path.to_string_lossy().to_string())
+        .into_uninstall_report(to_uninstall)
 }
 
 fn to_command(command: &str) -> std::process::Command {

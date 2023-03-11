@@ -1,13 +1,12 @@
-use std::{
-    collections::{hash_map::Entry, HashMap},
-    sync::Mutex,
-};
+use std::collections::hash_map::Entry;
+use std::collections::HashMap;
+use std::sync::Mutex;
 
 use lazy_static::lazy_static;
 use regex::{Regex, RegexBuilder};
 
 lazy_static! {
-    pub static ref REGEX_CACHE: Mutex<HashMap<String, Regex>> = Mutex::new(HashMap::new());
+    static ref REGEX_CACHE: Mutex<HashMap<String, Regex>> = Mutex::new(HashMap::new());
 }
 
 pub fn cached_match(input: Option<&str>, regex_pattern: Option<&str>) -> bool {

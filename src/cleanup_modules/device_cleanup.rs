@@ -1,24 +1,20 @@
 use async_trait::async_trait;
 use error_stack::{IntoReport, Result, ResultExt};
+use regex::Regex;
 use serde::Deserialize;
 use uuid::Uuid;
-use windows::{
-    core::HSTRING,
-    Win32::{Devices::DeviceAndDriverInstallation::*, Foundation::BOOL},
-};
+use windows::core::HSTRING;
+use windows::Win32::Devices::DeviceAndDriverInstallation::*;
+use windows::Win32::Foundation::BOOL;
 
-use super::{
-    get_path_to_dump, Dumper, IntoModuleReport, IntoUninstallReport, ModuleError, ModuleMetadata,
-    ModuleRunInfo, ModuleStrategy, ToUninstall, UninstallError,
-};
-use crate::{
-    cleanup_modules::create_dump_file,
-    services::{
-        self, identifiers, regex_cache,
-        windows::{enumerate_devices, inf_regex, Device},
-    },
-    State,
-};
+use super::*;
+
+use crate::cleanup_modules::create_dump_file;
+use crate::services;
+use crate::services::identifiers;
+use crate::services::regex_cache;
+use crate::services::windows::{enumerate_devices, Device};
+use crate::State;
 
 const DEVICE_MODULE_NAME: &str = "Device Cleanup";
 const DEVICE_MODULE_CLI: &str = "device-cleanup";
@@ -152,7 +148,7 @@ struct DeviceDumper {}
 #[async_trait]
 impl Dumper for DeviceDumper {
     async fn dump(&self, state: &State) -> Result<(), ModuleError> {
-        let inf_regex = inf_regex();
+        let inf_regex = Regex::new(r"^oem[0-9]+\.inf$").unwrap();
         let devices: Vec<Device> = enumerate_devices()
             .into_module_report(DEVICE_MODULE_NAME)?
             .into_iter()
@@ -184,20 +180,6 @@ impl Dumper for DeviceDumper {
     }
 }
 
-fn is_of_interest(device: &Device) -> bool {
-    use crate::services::interest::is_of_interest_iter as candidate_iter;
-    let strings = [
-        device.description(),
-        device.manufacturer(),
-        device.inf_original_name(),
-    ]
-    .into_iter()
-    .flatten()
-    .chain(device.hardware_ids().iter().map(|s| s.as_str()));
-
-    candidate_iter(strings)
-}
-
 #[derive(Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct DeviceToUninstall {
@@ -227,4 +209,18 @@ impl std::fmt::Display for DeviceToUninstall {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.friendly_name)
     }
+}
+
+fn is_of_interest(device: &Device) -> bool {
+    use crate::services::interest::is_of_interest_iter as candidate_iter;
+    let strings = [
+        device.description(),
+        device.manufacturer(),
+        device.inf_original_name(),
+    ]
+    .into_iter()
+    .flatten()
+    .chain(device.hardware_ids().iter().map(|s| s.as_str()));
+
+    candidate_iter(strings)
 }

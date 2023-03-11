@@ -4,23 +4,18 @@ use async_trait::async_trait;
 use error_stack::{IntoReport, Result, ResultExt};
 use serde::Deserialize;
 use uuid::Uuid;
-use windows::{
-    core::HSTRING,
-    Win32::{Devices::DeviceAndDriverInstallation::DiUninstallDriverW, Foundation::BOOL},
-};
+use windows::core::HSTRING;
+use windows::Win32::Devices::DeviceAndDriverInstallation::DiUninstallDriverW;
+use windows::Win32::Foundation::BOOL;
 
-use super::{
-    Dumper, IntoModuleReport, IntoUninstallReport, ModuleError, ModuleMetadata, ModuleRunInfo,
-    ModuleStrategy, ToUninstall, UninstallError,
-};
-use crate::{
-    cleanup_modules::{create_dump_file, get_path_to_dump},
-    services::{
-        self, identifiers, regex_cache,
-        windows::{enumerate_drivers, Driver},
-    },
-    State,
-};
+use super::*;
+
+use crate::cleanup_modules::{create_dump_file, get_path_to_dump};
+use crate::services;
+use crate::services::identifiers;
+use crate::services::regex_cache;
+use crate::services::windows::{enumerate_drivers, Driver};
+use crate::State;
 
 const DRIVER_MODULE_NAME: &str = "Driver Cleanup";
 const DRIVER_MODULE_CLI: &str = "driver-cleanup";
@@ -159,13 +154,6 @@ impl Dumper for DriverDumper {
     }
 }
 
-fn is_of_interest(driver: &Driver) -> bool {
-    use crate::services::interest::is_of_interest_iter as candidate_iter;
-    let strings = [driver.inf_original_name(), driver.provider()];
-
-    candidate_iter(strings.into_iter().flatten())
-}
-
 #[derive(Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct DriverToUninstall {
@@ -190,4 +178,11 @@ impl std::fmt::Display for DriverToUninstall {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.friendly_name)
     }
+}
+
+fn is_of_interest(driver: &Driver) -> bool {
+    use crate::services::interest::is_of_interest_iter as candidate_iter;
+
+    let strings = [driver.inf_original_name(), driver.provider()];
+    candidate_iter(strings.into_iter().flatten())
 }

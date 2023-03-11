@@ -1,7 +1,7 @@
 use clap::{command, Arg, ArgAction, Command};
-use tabletdrivercleanup::{cleanup_modules::*, *};
-
 use simplelog::{self, WriteLogger};
+use tabletdrivercleanup::cleanup_modules::*;
+use tabletdrivercleanup::*;
 
 #[tokio::main]
 async fn main() {

@@ -1,31 +1,58 @@
-use core::{fmt::Debug, result::Result as CResult};
-use std::{
-    ffi::{c_void, OsStr, OsString},
-    path::Path,
-    time::Duration,
-};
+use core::fmt::Debug;
+use core::result::Result as CResult;
+use std::ffi::{c_void, OsStr, OsString};
+use std::fmt;
+use std::path::Path;
+use std::time::Duration;
 
-use error_stack::{bail, report, IntoReport, Result, ResultExt};
+use error_stack::{bail, IntoReport, Result, ResultExt};
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::Serialize;
 use thiserror::Error;
 use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
-use windows::{
-    core::{HRESULT, HSTRING},
-    Win32::{
-        Devices::{DeviceAndDriverInstallation::*, Properties::*},
-        Foundation::*,
-        Security::{GetTokenInformation, TokenElevation, TOKEN_ELEVATION, TOKEN_QUERY},
-        System::Threading::{
-            GetCurrentProcess, OpenProcess, OpenProcessToken, WaitForSingleObject,
-            PROCESS_SYNCHRONIZE,
-        },
-    },
+use windows::core::{HRESULT, HSTRING};
+use windows::Win32::Devices::DeviceAndDriverInstallation::*;
+use windows::Win32::Devices::Properties::*;
+use windows::Win32::Foundation::*;
+use windows::Win32::Security::{GetTokenInformation, TokenElevation, TOKEN_ELEVATION, TOKEN_QUERY};
+use windows::Win32::System::Threading::{
+    GetCurrentProcess, OpenProcess, OpenProcessToken, WaitForSingleObject, PROCESS_SYNCHRONIZE,
 };
+use winreg::enums::*;
+use winreg::types::FromRegValue;
 use winreg::RegKey;
-use winreg::{enums::*, types::FromRegValue};
+
+const X64_UNINSTALL_KEY: &str = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
+const X86_UNINSTALL_KEY: &str =
+    "SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
+
+#[derive(Debug, Error)]
+enum FfiError {
+    #[error("I/O failed")]
+    Io,
+    #[error("Parser has failed to parse the buffer")]
+    Parser,
+}
+
+#[derive(Debug, Error)]
+pub enum EnumerationError {
+    #[error("Failed to enumerate devices")]
+    Device,
+    #[error("Failed to enumerate device drivers")]
+    Driver,
+    #[error("Failed to enumerate driver packages")]
+    DriverPackage,
+}
+
+#[derive(Error, Debug)]
+pub enum WaitError {
+    #[error("Timed out waiting for process")]
+    Timeout,
+    #[error("Failed to wait for process")]
+    Failed,
+}
 
 struct Handle {
     handle: HANDLE,
@@ -49,6 +76,25 @@ impl Drop for Handle {
             CloseHandle(self.handle);
         }
     }
+}
+
+struct InfFileHandle {
+    handle: *const c_void,
+}
+
+impl Drop for InfFileHandle {
+    fn drop(&mut self) {
+        unsafe {
+            SetupCloseInfFile(self.handle);
+        }
+    }
+}
+
+#[derive(Debug, Error)]
+#[error("Failed to get value")]
+struct GenericGetError {
+    required_size: u32,
+    error: WIN32_ERROR,
 }
 
 #[derive(Serialize)]
@@ -169,8 +215,8 @@ impl Device {
     }
 }
 
-impl std::fmt::Display for Device {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for Device {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.friendly_name() {
             Some(name) => write!(f, "{} ({})", name, self.instance_id()),
             None => write!(f, "{}", self.instance_id()),
@@ -178,8 +224,8 @@ impl std::fmt::Display for Device {
     }
 }
 
-impl std::fmt::Debug for Device {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Debug for Device {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Device")
             .field("friendly_name", &self.friendly_name)
             .field("class", &self.class)
@@ -187,7 +233,7 @@ impl std::fmt::Debug for Device {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct Driver {
     inf_name: String,
     inf_original_name: Option<String>,
@@ -242,21 +288,12 @@ impl Driver {
     }
 }
 
-impl std::fmt::Display for Driver {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for Driver {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self.inf_original_name {
             Some(original) => write!(f, "{} ({})", self.inf_name, original),
             None => write!(f, "{}", self.inf_name),
         }
-    }
-}
-
-impl std::fmt::Debug for Driver {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Driver")
-            .field("provider", &self.provider)
-            .field("inf_original_name", &self.inf_original_name)
-            .finish()
     }
 }
 
@@ -347,8 +384,8 @@ impl DriverPackage {
     }
 }
 
-impl std::fmt::Display for DriverPackage {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for DriverPackage {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.display_name() {
             Some(display_name) => write!(f, "{}", display_name),
             None => write!(f, "{}", self.key_name()),
@@ -387,22 +424,47 @@ pub fn process_is_elevated() -> bool {
     }
 }
 
-#[derive(Debug, Error)]
-enum FfiError {
-    #[error("I/O failed")]
-    Io,
-    #[error("parser has failed to parse the buffer")]
-    Parser,
-}
+pub async fn wait_for_process_async(
+    process_id: u32,
+    ct: Option<CancellationToken>,
+) -> Result<(), WaitError> {
+    unsafe {
+        let process = OpenProcess(PROCESS_SYNCHRONIZE, false, process_id);
 
-#[derive(Debug, Error)]
-pub enum EnumerationError {
-    #[error("failed to enumerate devices")]
-    Device,
-    #[error("failed to enumerate device drivers")]
-    Driver,
-    #[error("failed to enumerate driver packages")]
-    DriverPackage,
+        let process = match process {
+            Ok(process) => process,
+            Err(error) => {
+                return Err(error)
+                    .into_report()
+                    .attach_printable("failed to open process")
+                    .change_context(WaitError::Failed)
+            }
+        };
+
+        let process = Handle::from(process);
+
+        loop {
+            let err = WaitForSingleObject(process.handle, 0);
+            match err {
+                WAIT_OBJECT_0 => return Ok(()),
+                WAIT_ABANDONED => return Ok(()),
+                WAIT_TIMEOUT => {
+                    if let Some(ct) = &ct {
+                        if ct.is_cancelled() {
+                            bail!(WaitError::Timeout);
+                        }
+                    }
+                    tokio::time::sleep(Duration::from_millis(20)).await;
+                }
+                WAIT_FAILED => {
+                    return Err(windows::core::Error::from_win32())
+                        .into_report()
+                        .change_context(WaitError::Failed)
+                }
+                _ => unreachable!("WaitForSingleObject returned an invalid value"),
+            }
+        }
+    }
 }
 
 pub fn enumerate_devices() -> Result<Vec<Device>, EnumerationError> {
@@ -499,8 +561,7 @@ fn create_device(
         .attach_printable("failed to get device 'DEVPKEY_Device_DriverInfPath'")?;
     let inf_original_name = if let Some(inf_name) = &inf_name {
         get_inf_driver_store_location(&OsString::from(inf_name.as_str()))
-            .change_context(EnumerationError::Device)
-            .attach_printable("failed to get inf original name")?
+            .change_context(EnumerationError::Device)?
     } else {
         None
     };
@@ -546,18 +607,6 @@ fn create_device(
     ))
 }
 
-struct InfFileHandle {
-    handle: *const c_void,
-}
-
-impl Drop for InfFileHandle {
-    fn drop(&mut self) {
-        unsafe {
-            SetupCloseInfFile(self.handle);
-        }
-    }
-}
-
 pub fn enumerate_drivers() -> Result<Vec<Driver>, EnumerationError> {
     unsafe {
         let mut drivers = Vec::<Driver>::new();
@@ -582,46 +631,7 @@ pub fn enumerate_drivers() -> Result<Vec<Driver>, EnumerationError> {
                     .change_context(EnumerationError::Driver);
             }
 
-            let driver: Result<Driver, EnumerationError> = {
-                let inf_original_name = get_inf_driver_store_location(&inf)
-                    .change_context(EnumerationError::Driver)
-                    .attach_printable("failed to get inf original name")?;
-                let inf_provider =
-                    get_inf_property(inf_file.handle, "Version", "Provider", parse_str)
-                        .change_context(EnumerationError::Driver)
-                        .attach_printable(
-                            "failed to get inf property 'Provider' in section 'Version'",
-                        )?;
-                let class_name = get_inf_property(inf_file.handle, "Version", "Class", parse_str)
-                    .change_context(EnumerationError::Driver)
-                    .attach_printable("failed to get inf property 'Class' in section 'Version'")?;
-                let class_uuid =
-                    get_inf_property(inf_file.handle, "Version", "ClassGUID", parse_uuid)
-                        .change_context(EnumerationError::Driver)
-                        .attach_printable(
-                            "failed to get inf property 'ClassGUID' in section 'Version'",
-                        )?
-                        .unwrap_or_default();
-
-                let inf_original_name = inf_original_name.as_ref().map(Path::new);
-
-                Ok(Driver::new(
-                    inf.to_str().unwrap().to_string(),
-                    inf_original_name
-                        .and_then(|f| f.file_name())
-                        .and_then(|f| f.to_str())
-                        .map(|f| f.to_owned()),
-                    inf_original_name
-                        .and_then(|f| f.parent())
-                        .and_then(|f| f.to_str())
-                        .map(|f| f.to_owned()),
-                    inf_provider,
-                    class_name,
-                    class_uuid,
-                ))
-            };
-
-            let driver = driver?;
+            let driver = create_driver(inf, inf_file)?;
             drivers.push(driver);
         }
 
@@ -629,32 +639,62 @@ pub fn enumerate_drivers() -> Result<Vec<Driver>, EnumerationError> {
     }
 }
 
+fn create_driver(inf: OsString, inf_file: InfFileHandle) -> Result<Driver, EnumerationError> {
+    let inf_original_name =
+        get_inf_driver_store_location(&inf).change_context(EnumerationError::Driver)?;
+    let inf_provider = get_inf_property(inf_file.handle, "Version", "Provider", parse_str)
+        .change_context(EnumerationError::Driver)?;
+    let class_name = get_inf_property(inf_file.handle, "Version", "Class", parse_str)
+        .change_context(EnumerationError::Driver)?;
+    let class_uuid = get_inf_property(inf_file.handle, "Version", "ClassGUID", parse_uuid)
+        .change_context(EnumerationError::Driver)?
+        .unwrap_or_default();
+
+    let inf_original_name = inf_original_name.as_ref().map(Path::new);
+
+    Ok(Driver::new(
+        inf.to_str().unwrap().to_string(),
+        inf_original_name
+            .and_then(|f| f.file_name())
+            .and_then(|f| f.to_str())
+            .map(|f| f.to_owned()),
+        inf_original_name
+            .and_then(|f| f.parent())
+            .and_then(|f| f.to_str())
+            .map(|f| f.to_owned()),
+        inf_provider,
+        class_name,
+        class_uuid,
+    ))
+}
+
 pub fn enumerate_driver_packages() -> Result<Vec<DriverPackage>, EnumerationError> {
     let mut driver_packages = Vec::<DriverPackage>::new();
+
     let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
-    let uninstall_path = Path::new("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall");
+    let uninstall_path = Path::new(X64_UNINSTALL_KEY);
+    let x86_uninstall_path = Path::new(X86_UNINSTALL_KEY);
+
     let uninstall_key = open_key(&hklm, uninstall_path);
-    let x86_uninstall_path =
-        Path::new("SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall");
     let x86_uninstall_key = open_key(&hklm, x86_uninstall_path);
 
-    if let Ok(key) = uninstall_key {
-        for subkey_name in key.enum_keys().map(|x| x.unwrap()) {
-            if let Ok(subkey) = key.open_subkey(&subkey_name) {
-                let subkey_path: String = Path::join(uninstall_path, subkey_name)
-                    .to_str()
-                    .unwrap()
-                    .to_string();
-                driver_packages.push(DriverPackage::from(&subkey, subkey_path, false));
-            }
+    match uninstall_key {
+        Ok(key) => {
+            key.enum_keys().map(|x| x.unwrap()).for_each(|subkey_name| {
+                if let Ok(subkey) = key.open_subkey(&subkey_name) {
+                    let subkey_path: String = Path::join(uninstall_path, subkey_name)
+                        .to_str()
+                        .unwrap()
+                        .to_string();
+                    driver_packages.push(DriverPackage::from(&subkey, subkey_path, false));
+                }
+            });
         }
-    } else {
-        return Err(report!(EnumerationError::DriverPackage))
-            .attach_printable("failed to open uninstall key");
+        Err(error) => return Err(error).attach_printable("failed to open uninstall key"),
     }
 
     if let Ok(key) = x86_uninstall_key {
-        for subkey_name in key.enum_keys().map(|x| x.unwrap()) {
+        key.enum_keys().map(|x| x.unwrap()).for_each(|subkey_name| {
             if let Ok(subkey) = key.open_subkey(&subkey_name) {
                 let subkey_path: String = Path::join(x86_uninstall_path, subkey_name)
                     .to_str()
@@ -662,7 +702,7 @@ pub fn enumerate_driver_packages() -> Result<Vec<DriverPackage>, EnumerationErro
                     .to_string();
                 driver_packages.push(DriverPackage::from(&subkey, subkey_path, true));
             }
-        }
+        });
     }
 
     Ok(driver_packages)
@@ -678,6 +718,54 @@ fn open_key(hklm: &RegKey, uninstall_path: &Path) -> Result<RegKey, EnumerationE
             )
         })
         .change_context(EnumerationError::DriverPackage)
+}
+
+fn get_inf_file_list() -> Vec<OsString> {
+    let windir = std::env::var("WINDIR").unwrap();
+    lazy_static! {
+        static ref INF_REGEX: Regex = Regex::new(r"^oem[0-9]+\.inf$").unwrap();
+    }
+
+    Path::new(&windir)
+        .join("inf")
+        .read_dir()
+        .unwrap()
+        .map(|e| e.unwrap().file_name())
+        .filter(|e| INF_REGEX.is_match(e.to_str().unwrap()))
+        .collect()
+}
+
+fn get_inf_driver_store_location(inf_name: &OsStr) -> Result<Option<String>, FfiError> {
+    generic_get(
+        |buffer| unsafe {
+            let mut size: u32 = 0;
+            let mut empty_arr: [u16; 0] = [];
+            if !SetupGetInfDriverStoreLocationW(
+                &HSTRING::from(inf_name),
+                None,
+                None,
+                buffer.map(to_u16_slice_mut).unwrap_or(&mut empty_arr),
+                Some(&mut size),
+            )
+            .as_bool()
+            {
+                Err(GenericGetError {
+                    required_size: size * 2, // PCWSTR to byte
+                    error: GetLastError(),
+                })
+            } else {
+                Ok(())
+            }
+        },
+        parse_str,
+        &[ERROR_NOT_FOUND, ERROR_FILE_NOT_FOUND],
+    )
+    .attach_printable_lazy(|| {
+        format!(
+            "failed to get original name of {}",
+            inf_name.to_string_lossy()
+        )
+    })
 }
 
 fn get_inf_property<T>(
@@ -716,56 +804,12 @@ where
         parser,
         &[],
     )
-}
-
-fn get_inf_file_list() -> Vec<OsString> {
-    let windir = std::env::var("WINDIR").unwrap();
-    lazy_static! {
-        static ref INF_REGEX: Regex = Regex::new(r"^oem[0-9]+\.inf$").unwrap();
-    }
-
-    Path::new(&windir)
-        .join("inf")
-        .read_dir()
-        .unwrap()
-        .map(|e| e.unwrap().file_name())
-        .filter(|e| INF_REGEX.is_match(e.to_str().unwrap()))
-        .collect()
-}
-
-fn get_device_registry_property<T>(
-    device_info_set: HDEVINFO,
-    device_info: &SP_DEVINFO_DATA,
-    prop: u32,
-    parser: impl FnOnce(&[u8]) -> Result<T, FfiError>,
-) -> Result<Option<T>, FfiError>
-where
-    T: Default,
-{
-    generic_get(
-        |buffer| unsafe {
-            let mut size: u32 = 0;
-            if !SetupDiGetDeviceRegistryPropertyW(
-                device_info_set,
-                device_info,
-                prop,
-                None,
-                buffer,
-                Some(&mut size),
-            )
-            .as_bool()
-            {
-                return Err(GenericGetError {
-                    required_size: size,
-                    error: GetLastError(),
-                });
-            }
-
-            Ok(())
-        },
-        parser,
-        &[ERROR_INVALID_DATA],
-    )
+    .attach_printable_lazy(|| {
+        format!(
+            "failed to get inf property '{}' in section '{}'",
+            key, section
+        )
+    })
 }
 
 fn get_device_instance_id(
@@ -801,33 +845,44 @@ fn get_device_instance_id(
     )
 }
 
-fn to_u16_slice(slice: &[u8]) -> &[u16] {
-    assert!(
-        (slice.len() & 1) == 0,
-        "slice should have even value, has: {}",
-        slice.len()
-    );
-    unsafe { std::slice::from_raw_parts(slice.as_ptr() as *const u16, slice.len() / 2) }
+fn get_device_registry_property<T: Default>(
+    device_info_set: HDEVINFO,
+    device_info: &SP_DEVINFO_DATA,
+    prop: u32,
+    parser: impl FnOnce(&[u8]) -> Result<T, FfiError>,
+) -> Result<Option<T>, FfiError> {
+    generic_get(
+        |buffer| unsafe {
+            let mut size: u32 = 0;
+            if !SetupDiGetDeviceRegistryPropertyW(
+                device_info_set,
+                device_info,
+                prop,
+                None,
+                buffer,
+                Some(&mut size),
+            )
+            .as_bool()
+            {
+                return Err(GenericGetError {
+                    required_size: size,
+                    error: GetLastError(),
+                });
+            }
+
+            Ok(())
+        },
+        parser,
+        &[ERROR_INVALID_DATA],
+    )
 }
 
-fn to_u16_slice_mut(slice: &mut [u8]) -> &mut [u16] {
-    assert!(
-        (slice.len() & 1) == 0,
-        "slice should have even value, has: {}",
-        slice.len()
-    );
-    unsafe { std::slice::from_raw_parts_mut(slice.as_mut_ptr() as *mut u16, slice.len() / 2) }
-}
-
-fn get_device_property<T>(
+fn get_device_property<T: Default>(
     device_info_set: HDEVINFO,
     device_info: &SP_DEVINFO_DATA,
     prop_key: &DEVPROPKEY,
     parser: impl FnOnce(&[u8]) -> Result<T, FfiError>,
-) -> Result<Option<T>, FfiError>
-where
-    T: Default,
-{
+) -> Result<Option<T>, FfiError> {
     generic_get(
         |buffer| unsafe {
             let mut size: u32 = 0;
@@ -853,33 +908,6 @@ where
         },
         parser,
         &[ERROR_NOT_FOUND],
-    )
-}
-
-fn get_inf_driver_store_location(inf_name: &OsStr) -> Result<Option<String>, FfiError> {
-    generic_get(
-        |buffer| unsafe {
-            let mut size: u32 = 0;
-            let mut empty_arr: [u16; 0] = [];
-            if !SetupGetInfDriverStoreLocationW(
-                &HSTRING::from(inf_name),
-                None,
-                None,
-                buffer.map(to_u16_slice_mut).unwrap_or(&mut empty_arr),
-                Some(&mut size),
-            )
-            .as_bool()
-            {
-                Err(GenericGetError {
-                    required_size: size * 2, // PCWSTR to byte
-                    error: GetLastError(),
-                })
-            } else {
-                Ok(())
-            }
-        },
-        parse_str,
-        &[ERROR_NOT_FOUND, ERROR_FILE_NOT_FOUND],
     )
 }
 
@@ -911,13 +939,6 @@ fn parse_uuid(buffer: &[u8]) -> Result<Uuid, FfiError> {
 
 fn parse_bool(buffer: &[u8]) -> Result<bool, FfiError> {
     Ok((buffer[0] as i8) == -1)
-}
-
-#[derive(Debug, Error)]
-#[error("failed to get value")]
-struct GenericGetError {
-    required_size: u32,
-    error: WIN32_ERROR,
 }
 
 fn generic_get<T>(
@@ -967,72 +988,20 @@ where
     }
 }
 
-#[derive(Error, Debug)]
-pub enum WaitError {
-    #[error("timed out waiting for process")]
-    Timeout,
-    #[error("failed to wait for process: {0}")]
-    Failed(windows::core::Error),
+fn to_u16_slice(slice: &[u8]) -> &[u16] {
+    assert!(
+        (slice.len() & 1) == 0,
+        "slice should have even value, has: {}",
+        slice.len()
+    );
+    unsafe { std::slice::from_raw_parts(slice.as_ptr() as *const u16, slice.len() / 2) }
 }
 
-// pub fn wait_for_process(process_id: u32, timeout: Option<u32>) -> Result<(), WaitError> {
-//     unsafe {
-//         let process = OpenProcess(PROCESS_SYNCHRONIZE, false, process_id);
-
-//         let process = match process {
-//             Ok(process) => process,
-//             Err(error) => bail!(WaitError::Failed(error.code().into())),
-//         };
-
-//         let err = WaitForSingleObject(process, timeout.unwrap_or(INFINITE));
-//         match err {
-//             WAIT_OBJECT_0 => Ok(()),
-//             WAIT_ABANDONED => Ok(()),
-//             WAIT_TIMEOUT => Err(report!(WaitError::Timeout)),
-//             WAIT_FAILED => Err(report!(WaitError::Failed(
-//                 windows::core::Error::from_win32()
-//             ))),
-//             _ => unreachable!("WaitForSingleObject returned an invalid value"),
-//         }
-//     }
-// }
-
-pub async fn wait_for_process_async(
-    process_id: u32,
-    ct: Option<CancellationToken>,
-) -> Result<(), WaitError> {
-    unsafe {
-        let process = OpenProcess(PROCESS_SYNCHRONIZE, false, process_id);
-
-        let process = match process {
-            Ok(process) => process,
-            Err(error) => bail!(WaitError::Failed(error.code().into())),
-        };
-
-        let process = Handle::from(process);
-
-        loop {
-            let err = WaitForSingleObject(process.handle, 0);
-            match err {
-                WAIT_OBJECT_0 => return Ok(()),
-                WAIT_ABANDONED => return Ok(()),
-                WAIT_TIMEOUT => {
-                    if let Some(ct) = &ct {
-                        if ct.is_cancelled() {
-                            bail!(WaitError::Timeout);
-                        }
-                    }
-                    tokio::time::sleep(Duration::from_millis(20)).await;
-                }
-                WAIT_FAILED => bail!(WaitError::Failed(windows::core::Error::from_win32())),
-                _ => unreachable!("WaitForSingleObject returned an invalid value"),
-            }
-        }
-    }
-}
-
-// const INFINITE: u32 = 4294967295u32;
-
-pub(crate) fn inf_regex() -> Regex {
-    Regex::new(r"^oem[0-9]+\.inf$").unwrap()
+fn to_u16_slice_mut(slice: &mut [u8]) -> &mut [u16] {
+    assert!(
+        (slice.len() & 1) == 0,
+        "slice should have even value, has: {}",
+        slice.len()
+    );
+    unsafe { std::slice::from_raw_parts_mut(slice.as_mut_ptr() as *mut u16, slice.len() / 2) }
 }

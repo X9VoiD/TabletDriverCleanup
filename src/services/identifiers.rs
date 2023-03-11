@@ -1,15 +1,13 @@
-use std::{
-    fs::File,
-    io::{Read, Write},
-    path::Path,
-};
-
-use crate::{no_color, State};
+use std::fs::File;
+use std::io::{Read, Write};
+use std::path::Path;
 
 use error_stack::{bail, report, IntoReport, Result, ResultExt};
 use include_dir::include_dir;
 use log::{error, info, warn};
 use thiserror::Error;
+
+use crate::{no_color, State};
 
 static EMBEDDED_IDENTIFIERS: include_dir::Dir = include_dir!("$CARGO_MANIFEST_DIR/config");
 

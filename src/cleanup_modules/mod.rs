@@ -29,7 +29,7 @@ pub trait Module {
 }
 
 #[derive(Debug, Error)]
-#[error("module '{name}' has encountered issues while running")]
+#[error("{name} has encountered issues while running")]
 pub struct ModuleError {
     name: &'static str,
 }
