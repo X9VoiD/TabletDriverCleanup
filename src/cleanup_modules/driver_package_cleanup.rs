@@ -99,11 +99,21 @@ impl ModuleStrategy for DriverPackageCleanupModule {
         use UninstallMethod::*;
 
         match &to_uninstall.uninstall_method {
-            Normal => run_uninstall_method(uninstall_normal, state, &object, to_uninstall).await,
+            Normal => {
+                run_uninstall_method(uninstall_normal, state, &object, to_uninstall).await
+            },
             Deferred => {
                 run_uninstall_method(uninstall_deferred, state, &object, to_uninstall).await
             }
-            RegistryOnly => uninstall_registry_only(object, to_uninstall),
+            RegistryOnly => {
+                uninstall_registry_only(object, to_uninstall)
+                    .attach_printable_lazy(|| {
+                        format!(
+                            "failed to open uninstall key for driver package '{}'",
+                            to_uninstall.friendly_name
+                        )
+                    })
+            },
         }
     }
 
@@ -114,39 +124,24 @@ impl ModuleStrategy for DriverPackageCleanupModule {
 
 fn uninstall_registry_only(
     object: DriverPackage,
-    to_uninstall: &DriverPackageToUninstall,
+    _to_uninstall: &DriverPackageToUninstall,
 ) -> Result<(), UninstallError> {
-    let base_key_name = if object.x86() {
-        "SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall"
-    } else {
-        "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall"
-    };
-
+    let key_path = Path::new(object.key_name());
+    let key_parent = key_path.parent().unwrap();
+    let key_name = key_path.file_name().unwrap();
     let flags = winreg::enums::KEY_WRITE;
+
     let uninstall_key = RegKey::predef(HKEY_LOCAL_MACHINE)
-        .open_subkey_with_flags(base_key_name, flags)
+        .open_subkey_with_flags(key_parent, flags)
         .into_report()
-        .change_context(UninstallError::UninstallFailed)
-        .attach_printable_lazy(|| {
-            format!(
-                "failed to open uninstall key for driver package '{}'",
-                to_uninstall.friendly_name
-            )
-        })?;
+        .attach_printable_lazy(|| key_parent.to_string_lossy().to_string())
+        .change_context(UninstallError::UninstallFailed)?;
 
     uninstall_key
-        .delete_subkey_all(Path::new(object.key_name()))
+        .delete_subkey_all(key_name)
         .into_report()
-        .attach_printable_lazy(|| {
-            object.key_name().to_string()
-        })
+        .attach_printable_lazy(|| key_path.to_string_lossy().to_string())
         .change_context(UninstallError::UninstallFailed)
-        .attach_printable_lazy(|| {
-            format!(
-                "failed to delete uninstall key for driver package '{}'",
-                to_uninstall.friendly_name
-            )
-        })
 }
 
 #[derive(Default)]
