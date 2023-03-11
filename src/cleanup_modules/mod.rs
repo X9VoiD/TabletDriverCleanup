@@ -133,7 +133,7 @@ where
                         }
                         UninstallError::UninstallFailed => {
                             eprintln!("Failed to uninstall '{}'!", object_to_uninstall);
-                            eprintln!("{:?}", ret);
+                            eprintln!("{:?}", err);
                         }
                     },
                 }

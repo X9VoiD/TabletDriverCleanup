@@ -137,6 +137,9 @@ fn uninstall_registry_only(
     uninstall_key
         .delete_subkey_all(Path::new(object.key_name()))
         .into_report()
+        .attach_printable_lazy(|| {
+            object.key_name().to_string()
+        })
         .change_context(UninstallError::UninstallFailed)
         .attach_printable_lazy(|| {
             format!(
