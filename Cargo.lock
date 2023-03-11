@@ -1226,7 +1226,7 @@ dependencies = [
 
 [[package]]
 name = "tabletdrivercleanup"
-version = "4.0.0"
+version = "4.0.1"
 dependencies = [
  "async-trait",
  "clap",
