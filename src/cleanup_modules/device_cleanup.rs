@@ -1,24 +1,21 @@
 use async_trait::async_trait;
-use error_stack::{report, IntoReport, Result, ResultExt};
+use error_stack::{IntoReport, Result, ResultExt};
 use serde::Deserialize;
 use uuid::Uuid;
 use windows::{
     core::HSTRING,
-    Win32::{
-        Devices::DeviceAndDriverInstallation::*,
-        Foundation::{GetLastError, BOOL},
-    },
+    Win32::{Devices::DeviceAndDriverInstallation::*, Foundation::BOOL},
 };
 
 use super::{
-    get_path_to_dump, Dumper, IntoModuleReport, ModuleError, ModuleMetadata, ModuleRunInfo,
-    ModuleStrategy, ToUninstall, UninstallError,
+    get_path_to_dump, Dumper, IntoModuleReport, IntoUninstallReport, ModuleError, ModuleMetadata,
+    ModuleRunInfo, ModuleStrategy, ToUninstall, UninstallError,
 };
 use crate::{
     cleanup_modules::create_dump_file,
     services::{
         self, identifiers, regex_cache,
-        windows::{enumerate_devices, inf_regex, Device, HResultExt},
+        windows::{enumerate_devices, inf_regex, Device},
     },
     State,
 };
@@ -85,15 +82,15 @@ impl ModuleStrategy for DeviceCleanupModule {
     async fn uninstall_object(
         &self,
         object: Self::Object,
-        _to_uninstall: &Self::ToUninstall,
+        to_uninstall: &Self::ToUninstall,
         _state: &State,
         run_info: &mut ModuleRunInfo,
     ) -> Result<(), UninstallError> {
         unsafe {
             let device_info_set = SetupDiCreateDeviceInfoList(None, None)
                 .into_report()
-                .change_context(UninstallError::UninstallFailed)
-                .attach_printable_lazy(|| "failed to create a device list")?;
+                .attach_printable_lazy(|| "failed to create a device list")
+                .into_uninstall_report(to_uninstall)?;
             let mut device_info_data = SP_DEVINFO_DATA {
                 cbSize: std::mem::size_of::<SP_DEVINFO_DATA>() as u32,
                 ..SP_DEVINFO_DATA::default()
@@ -108,12 +105,13 @@ impl ModuleStrategy for DeviceCleanupModule {
             )
             .as_bool()
             {
-                let error = GetLastError();
-                return Err(report!(UninstallError::UninstallFailed))
+                let error = windows::core::Error::from_win32();
+                return Err(error)
+                    .into_report()
                     .attach_printable_lazy(|| {
                         format!("failed to open device info of {}", object.instance_id())
                     })
-                    .attach_win32_error(error);
+                    .into_uninstall_report(to_uninstall);
             }
 
             let mut reboot: BOOL = false.into();
@@ -126,12 +124,13 @@ impl ModuleStrategy for DeviceCleanupModule {
             )
             .as_bool()
             {
-                let error = GetLastError();
-                return Err(report!(UninstallError::UninstallFailed))
+                let error = windows::core::Error::from_win32();
+                return Err(error)
+                    .into_report()
                     .attach_printable_lazy(|| {
                         format!("failed to uninstall device {}", object.instance_id())
                     })
-                    .attach_win32_error(error);
+                    .into_uninstall_report(to_uninstall);
             }
 
             if reboot.as_bool() {

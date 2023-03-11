@@ -1,26 +1,23 @@
 use std::path::Path;
 
 use async_trait::async_trait;
-use error_stack::{report, IntoReport, Result, ResultExt};
+use error_stack::{IntoReport, Result, ResultExt};
 use serde::Deserialize;
 use uuid::Uuid;
 use windows::{
     core::HSTRING,
-    Win32::{
-        Devices::DeviceAndDriverInstallation::DiUninstallDriverW,
-        Foundation::{GetLastError, BOOL},
-    },
+    Win32::{Devices::DeviceAndDriverInstallation::DiUninstallDriverW, Foundation::BOOL},
 };
 
 use super::{
-    Dumper, IntoModuleReport, ModuleError, ModuleMetadata, ModuleRunInfo, ModuleStrategy,
-    ToUninstall, UninstallError,
+    Dumper, IntoModuleReport, IntoUninstallReport, ModuleError, ModuleMetadata, ModuleRunInfo,
+    ModuleStrategy, ToUninstall, UninstallError,
 };
 use crate::{
     cleanup_modules::{create_dump_file, get_path_to_dump},
     services::{
         self, identifiers, regex_cache,
-        windows::{enumerate_drivers, Driver, HResultExt},
+        windows::{enumerate_drivers, Driver},
     },
     State,
 };
@@ -87,7 +84,7 @@ impl ModuleStrategy for DriverCleanupModule {
     async fn uninstall_object(
         &self,
         object: Self::Object,
-        _to_uninstall: &Self::ToUninstall,
+        to_uninstall: &Self::ToUninstall,
         _state: &State,
         run_info: &mut ModuleRunInfo,
     ) -> Result<(), UninstallError> {
@@ -104,12 +101,13 @@ impl ModuleStrategy for DriverCleanupModule {
             )
             .as_bool()
             {
-                let err = GetLastError();
-                return Err(report!(UninstallError::UninstallFailed))
+                let err = windows::core::Error::from_win32();
+                return Err(err)
+                    .into_report()
                     .attach_printable_lazy(|| {
                         format!("failed to uninstall inf: {}", inf_path.display())
                     })
-                    .attach_win32_error(err);
+                    .into_uninstall_report(to_uninstall);
             }
 
             if reboot.as_bool() {

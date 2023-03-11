@@ -16,8 +16,8 @@ use winreg::{enums::HKEY_LOCAL_MACHINE, RegKey};
 use wmi::{COMLibrary, WMIConnection, WMIError};
 
 use super::{
-    create_dump_file, Dumper, IntoModuleReport, ModuleError, ModuleMetadata, ModuleRunInfo,
-    ModuleStrategy, ToUninstall, UninstallError,
+    create_dump_file, Dumper, IntoModuleReport, IntoUninstallReport, ModuleError, ModuleMetadata,
+    ModuleRunInfo, ModuleStrategy, ToUninstall, UninstallError,
 };
 use crate::{
     cleanup_modules::get_path_to_dump,
@@ -99,21 +99,18 @@ impl ModuleStrategy for DriverPackageCleanupModule {
         use UninstallMethod::*;
 
         match &to_uninstall.uninstall_method {
-            Normal => {
-                run_uninstall_method(uninstall_normal, state, &object, to_uninstall).await
-            },
+            Normal => run_uninstall_method(uninstall_normal, state, &object, to_uninstall).await,
             Deferred => {
                 run_uninstall_method(uninstall_deferred, state, &object, to_uninstall).await
             }
             RegistryOnly => {
-                uninstall_registry_only(object, to_uninstall)
-                    .attach_printable_lazy(|| {
-                        format!(
-                            "failed to open uninstall key for driver package '{}'",
-                            to_uninstall.friendly_name
-                        )
-                    })
-            },
+                uninstall_registry_only(object, to_uninstall).attach_printable_lazy(|| {
+                    format!(
+                        "failed to open uninstall key for driver package '{}'",
+                        to_uninstall.friendly_name
+                    )
+                })
+            }
         }
     }
 
@@ -124,7 +121,7 @@ impl ModuleStrategy for DriverPackageCleanupModule {
 
 fn uninstall_registry_only(
     object: DriverPackage,
-    _to_uninstall: &DriverPackageToUninstall,
+    to_uninstall: &DriverPackageToUninstall,
 ) -> Result<(), UninstallError> {
     let key_path = Path::new(object.key_name());
     let key_parent = key_path.parent().unwrap();
@@ -135,13 +132,13 @@ fn uninstall_registry_only(
         .open_subkey_with_flags(key_parent, flags)
         .into_report()
         .attach_printable_lazy(|| key_parent.to_string_lossy().to_string())
-        .change_context(UninstallError::UninstallFailed)?;
+        .into_uninstall_report(to_uninstall)?;
 
     uninstall_key
         .delete_subkey_all(key_name)
         .into_report()
         .attach_printable_lazy(|| key_path.to_string_lossy().to_string())
-        .change_context(UninstallError::UninstallFailed)
+        .into_uninstall_report(to_uninstall)
 }
 
 #[derive(Default)]
@@ -226,21 +223,21 @@ where
 async fn uninstall_normal(
     _state: &State,
     object: &DriverPackage,
-    _to_uninstall: &DriverPackageToUninstall,
+    to_uninstall: &DriverPackageToUninstall,
     _ct: CancellationToken,
 ) -> Result<(), UninstallError> {
     let uninstall_string = object.uninstall_string().unwrap();
     let child_process = match to_command(uninstall_string).spawn() {
         Ok(child) => child,
         Err(err) => match err.kind() {
-            ErrorKind::NotFound => bail!(UninstallError::AlreadyUninstalled),
+            ErrorKind::NotFound => bail!(UninstallError::uninstalled(to_uninstall)),
             _ => {
                 return Err(err)
                     .into_report()
-                    .change_context(UninstallError::UninstallFailed)
                     .attach_printable_lazy(|| {
                         format!("failed to launch uninstaller: {}", uninstall_string)
                     })
+                    .into_uninstall_report(to_uninstall)
             }
         },
     };
@@ -248,10 +245,10 @@ async fn uninstall_normal(
     wait_for_process_async(child_process)
         .await
         .into_report()
-        .change_context(UninstallError::UninstallFailed)
         .attach_printable_lazy(|| {
             format!("failed to wait on child process, exe: {}", uninstall_string)
-        })?;
+        })
+        .into_uninstall_report(to_uninstall)?;
 
     Ok(())
 }
@@ -259,7 +256,7 @@ async fn uninstall_normal(
 async fn uninstall_deferred(
     _state: &State,
     object: &DriverPackage,
-    _to_uninstall: &DriverPackageToUninstall,
+    to_uninstall: &DriverPackageToUninstall,
     _ct: CancellationToken,
 ) -> Result<(), UninstallError> {
     let uninstall_string = object.uninstall_string().unwrap();
@@ -274,14 +271,14 @@ async fn uninstall_deferred(
     let child = match command.spawn() {
         Ok(child) => child,
         Err(err) => match err.kind() {
-            ErrorKind::NotFound => bail!(UninstallError::AlreadyUninstalled),
+            ErrorKind::NotFound => bail!(UninstallError::uninstalled(to_uninstall)),
             _ => {
                 return Err(err)
                     .into_report()
-                    .change_context(UninstallError::UninstallFailed)
                     .attach_printable_lazy(|| {
                         format!("failed to launch uninstaller: {}", uninstall_string)
                     })
+                    .into_uninstall_report(to_uninstall)
             }
         },
     };
@@ -314,13 +311,13 @@ async fn uninstall_deferred(
             (Err(err), _) => {
                 return Err(err)
                     .into_report()
-                    .change_context(UninstallError::UninstallFailed)
                     .attach_printable("failed to wait for main uninstaller process")
+                    .into_uninstall_report(to_uninstall)
             }
             (_, Err(err)) => {
                 return Err(err)
-                    .change_context(UninstallError::UninstallFailed)
                     .attach_printable("failed to wait for uninstaller's delegated process")
+                    .into_uninstall_report(to_uninstall)
             }
         }
         ct.cancel();
@@ -328,8 +325,8 @@ async fn uninstall_deferred(
         wait_for_process_async(child)
             .await
             .into_report()
-            .change_context(UninstallError::UninstallFailed)
-            .attach_printable("failed to wait for main uninstaller process")?;
+            .attach_printable("failed to wait for main uninstaller process")
+            .into_uninstall_report(to_uninstall)?;
     }
 
     Ok(())

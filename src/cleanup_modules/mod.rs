@@ -35,11 +35,29 @@ pub struct ModuleError {
 }
 
 #[derive(Debug, Error)]
-enum UninstallError {
-    #[error("failed to uninstall")]
-    UninstallFailed,
-    #[error("the component is already uninstalled")]
-    AlreadyUninstalled,
+pub(crate) enum UninstallError {
+    #[error("Failed to uninstall {0}")]
+    UninstallFailed(&'static str),
+    #[error("{0} is already uninstalled")]
+    AlreadyUninstalled(&'static str),
+}
+
+impl UninstallError {
+    fn failed<T>(uninstall_object: &T) -> Self
+    where
+        T: Display,
+    {
+        let str: &'static str = Box::leak(uninstall_object.to_string().into_boxed_str());
+        Self::UninstallFailed(str)
+    }
+
+    fn uninstalled<T>(uninstall_object: &T) -> Self
+    where
+        T: Display,
+    {
+        let str: &'static str = Box::leak(uninstall_object.to_string().into_boxed_str());
+        Self::AlreadyUninstalled(str)
+    }
 }
 
 trait ToUninstall<T> {
@@ -125,17 +143,8 @@ where
                     .uninstall_object(object, object_to_uninstall, state, &mut module_run_info)
                     .await;
 
-                match ret {
-                    Ok(_) => {}
-                    Err(err) => match err.current_context() {
-                        UninstallError::AlreadyUninstalled => {
-                            println!("'{}' is already uninstalled!", object_to_uninstall)
-                        }
-                        UninstallError::UninstallFailed => {
-                            eprintln!("Failed to uninstall '{}'!", object_to_uninstall);
-                            eprintln!("{:?}", err);
-                        }
-                    },
+                if let Err(err) = ret {
+                    eprintln!("{:?}", err);
                 }
             }
         }
@@ -202,5 +211,19 @@ where
 {
     fn into_module_report(self, module_name: &'static str) -> Result<T, ModuleError> {
         self.change_context_lazy(|| ModuleError { name: module_name })
+    }
+}
+
+pub(crate) trait IntoUninstallReport<T, T2> {
+    fn into_uninstall_report(self, uninstall_object: &T2) -> Result<T, UninstallError>;
+}
+
+impl<T, T2, E> IntoUninstallReport<T, T2> for CResult<T, Report<E>>
+where
+    T2: Display,
+    E: Error + Context + Display,
+{
+    fn into_uninstall_report(self, uninstall_object: &T2) -> Result<T, UninstallError> {
+        self.change_context_lazy(|| UninstallError::failed(uninstall_object))
     }
 }

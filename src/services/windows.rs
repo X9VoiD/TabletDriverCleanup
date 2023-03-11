@@ -5,7 +5,7 @@ use std::{
     time::Duration,
 };
 
-use error_stack::{bail, report, IntoReport, Report, Result, ResultExt};
+use error_stack::{bail, report, IntoReport, Result, ResultExt};
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::Serialize;
@@ -13,7 +13,7 @@ use thiserror::Error;
 use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
 use windows::{
-    core::HSTRING,
+    core::{HRESULT, HSTRING},
     Win32::{
         Devices::{DeviceAndDriverInstallation::*, Properties::*},
         Foundation::*,
@@ -420,13 +420,14 @@ pub fn enumerate_devices() -> Result<Vec<Device>, EnumerationError> {
 
         for i in 0.. {
             if !SetupDiEnumDeviceInfo(device_info_set, i, &mut device_info).as_bool() {
-                let err = GetLastError();
-                if err != ERROR_NO_MORE_ITEMS {
-                    return Err(report!(EnumerationError::Device))
+                let err = windows::core::Error::from_win32();
+                if err.code() != HRESULT::from(ERROR_NO_MORE_ITEMS) {
+                    return Err(err)
+                        .into_report()
+                        .change_context(EnumerationError::Device)
                         .attach_printable_lazy(|| {
                             format!("failed to enumerate device info at index {i}")
-                        })
-                        .attach_win32_error(err);
+                        });
                 }
 
                 break;
@@ -572,12 +573,13 @@ pub fn enumerate_drivers() -> Result<Vec<Driver>, EnumerationError> {
             let inf_file = InfFileHandle { handle: inf_file };
 
             if inf_file.handle.is_null() {
-                let last_error = GetLastError();
-                return Err(report!(EnumerationError::Driver))
+                let error = windows::core::Error::from_win32();
+                return Err(error)
+                    .into_report()
                     .attach_printable_lazy(|| {
                         format!("failed to get a file handle to '{}'", inf.to_str().unwrap())
                     })
-                    .attach_win32_error(last_error);
+                    .change_context(EnumerationError::Driver);
             }
 
             let driver: Result<Driver, EnumerationError> = {
@@ -939,9 +941,11 @@ where
                 size = required_size
             }
             _ => {
-                return Err(report!(FfiError::Io))
-                    .attach_printable("failed to get value")
-                    .attach_win32_error(error)
+                let error: windows::core::Error = error.into();
+                return Err(error)
+                    .into_report()
+                    .attach_printable("failed to query required buffer size")
+                    .change_context(FfiError::Io);
             }
         },
     }
@@ -953,9 +957,13 @@ where
     let get = getter(Some(buffer_slice));
     match get {
         CResult::Ok(_) => Ok(Some(parser(buffer_slice)?)),
-        CResult::Err(GenericGetError { error, .. }) => Err(report!(FfiError::Io))
-            .attach_printable("failed to get value")
-            .attach_win32_error(error),
+        CResult::Err(GenericGetError { error, .. }) => {
+            let error: windows::core::Error = error.into();
+            Err(error)
+                .into_report()
+                .attach_printable("failed to get value")
+                .change_context(FfiError::Io)
+        }
     }
 }
 
@@ -1024,26 +1032,6 @@ pub async fn wait_for_process_async(
 }
 
 // const INFINITE: u32 = 4294967295u32;
-
-pub(crate) trait Win32ErrorExt {
-    fn to_hresult_message(&self) -> String;
-}
-
-impl Win32ErrorExt for WIN32_ERROR {
-    fn to_hresult_message(&self) -> String {
-        format!("error: {}, '{}'", self.0, self.to_hresult().message())
-    }
-}
-
-pub(crate) trait HResultExt {
-    fn attach_win32_error(self, error: WIN32_ERROR) -> Self;
-}
-
-impl<Value, Error> HResultExt for CResult<Value, Report<Error>> {
-    fn attach_win32_error(self, error: WIN32_ERROR) -> Self {
-        self.attach_printable_lazy(|| error.to_hresult_message())
-    }
-}
 
 pub(crate) fn inf_regex() -> Regex {
     Regex::new(r"^oem[0-9]+\.inf$").unwrap()

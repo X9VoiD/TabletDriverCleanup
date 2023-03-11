@@ -89,11 +89,11 @@ pub async fn get_resource(identifier: &'static str, state: &State) -> Result<Sou
     match resource {
         Ok(resource) => {
             no_color(|| info!("Got resource '{}' embedded", identifier));
-            return Ok(resource);
+            Ok(resource)
         }
         Err(err) => {
             no_color(|| warn!("{:?}", err));
-            return Err(err);
+            Err(err)
         }
     }
 }
