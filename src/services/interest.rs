@@ -35,7 +35,7 @@ lazy_static! {
         ])
     };
     static ref COUNTER_INTEREST_CACHE: HashMap::<&'static str, Regex> =
-        create_map(&["android", "logitech",]);
+        create_map(&["android", "logitech", " PS3 "]);
 }
 
 pub fn is_of_interest(string: Option<&str>) -> bool {
