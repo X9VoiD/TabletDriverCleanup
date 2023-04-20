@@ -84,8 +84,7 @@
   {
     "friendly_name": "Veikk WinUSB Device",
     "original_name": "usbtabletdevice\\.inf",
-    "provider": "Veikk",
-    "class": "108d8180-d429-450b-afa4-ac19039fc96f"
+    "provider": "Veikk"
   },
   {
     "friendly_name": "VHidDevice",
