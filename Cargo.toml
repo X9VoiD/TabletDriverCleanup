@@ -1,6 +1,6 @@
 [package]
 name = "tabletdrivercleanup"
-version = "4.0.1"
+version = "4.0.3"
 edition = "2021"
 
 [profile.release]
