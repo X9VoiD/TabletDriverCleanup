@@ -133,7 +133,7 @@ impl Dumper for DriverDumper {
         let file_path =
             get_path_to_dump(state, "drivers.json").into_module_report(DRIVER_MODULE_NAME)?;
         let dump_file = create_dump_file(&file_path).into_module_report(DRIVER_MODULE_NAME)?;
-        let file_name = file_path.file_name().unwrap().to_string_lossy();
+        let file_name = file_path.as_path().to_str().unwrap();
 
         if drivers.is_empty() {
             println!("No drivers to dump");

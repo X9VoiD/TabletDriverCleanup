@@ -159,7 +159,7 @@ impl Dumper for DeviceDumper {
         let file_path =
             get_path_to_dump(state, "devices.json").into_module_report(DEVICE_MODULE_NAME)?;
         let dump_file = create_dump_file(&file_path).into_module_report(DEVICE_MODULE_NAME)?;
-        let file_name = file_path.file_name().unwrap().to_string_lossy();
+        let file_name = file_path.as_path().to_str().unwrap();
 
         if devices.is_empty() {
             println!("No devices to dump");
