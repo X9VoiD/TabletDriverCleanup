@@ -912,7 +912,8 @@ fn get_device_property<T: Default>(
 }
 
 fn parse_str(buffer: &[u8]) -> Result<String, FfiError> {
-    Ok(HSTRING::from_wide(to_u16_slice(buffer))
+    let slice = to_u16_slice(buffer);
+    Ok(HSTRING::from_wide(&slice[0..slice.len() - 1])
         .into_report()
         .change_context(FfiError::Parser)
         .attach_printable("failed to parse string")?
@@ -920,11 +921,7 @@ fn parse_str(buffer: &[u8]) -> Result<String, FfiError> {
 }
 
 fn parse_uuid(buffer: &[u8]) -> Result<Uuid, FfiError> {
-    let string = HSTRING::from_wide(to_u16_slice(buffer))
-        .into_report()
-        .change_context(FfiError::Parser)
-        .attach_printable("failed to parse a uuid into a string")?
-        .to_string();
+    let string = parse_str(buffer)?;
     let str = string.trim_matches(|c: char| !c.is_ascii_alphanumeric());
     let str = match str.starts_with('{') {
         true => &str[1..str.len() - 1],
