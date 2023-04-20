@@ -6,6 +6,7 @@ use regex::{Regex, RegexBuilder};
 lazy_static! {
     static ref INTEREST_CACHE: HashMap::<&'static str, Regex> = {
         create_map(&[
+            r".*\(Interface \d+\)",
             "10moon",
             "Acepen",
             "Artisul",
