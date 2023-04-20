@@ -122,6 +122,12 @@
     "class": "3f966bd9-fa04-4ec5-991c-d326973b5128"
   },
   {
+    "friendly_name": "Wacom Driver Downloader",
+    "original_name": "wacdriverdl\\.inf",
+    "provider": "Wacom",
+    "class": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+  },
+  {
     "friendly_name": "Wacom HID Filter",
     "original_name": "wacomhidfilter\\.inf",
     "provider": "Wacom",
