@@ -139,6 +139,11 @@
     "class": "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
   },
   {
+    "friendly_name": "Wacom LibUsbK Driver",
+    "original_name": ".*\\(Interface[ _]\\d+\\)\\.inf",
+    "provider": "Wacom"
+  },
+  {
     "friendly_name": "Wacom Mouse Filter",
     "original_name": "wacommousefilter\\.inf",
     "provider": "Wacom",
