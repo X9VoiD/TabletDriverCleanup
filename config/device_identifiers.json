@@ -15,5 +15,11 @@
     "friendly_name": "Wacom Driver Downloader",
     "device_desc": "Wacom Driver Downloader",
     "manufacturer": "Wacom Technology"
+  },
+  {
+    "friendly_name": "Wacom LibusbK",
+    "device_desc": ".*\\(Interface \\d+\\)",
+    "manufacturer": "Wacom",
+    "class_uuid": "ecfb0cfd-74c4-4f52-bbf7-343461cd72ac"
   }
 ]
