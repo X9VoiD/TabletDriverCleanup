@@ -133,6 +133,22 @@ impl ModuleStrategy for DeviceCleanupModule {
                 run_info.reboot_required = true;
             }
 
+            if to_uninstall.uninstall_inf.unwrap_or(false) {
+                let inf_path = Path::new(object.driver_store_location().unwrap())
+                    .join(object.inf_original_name().unwrap());
+                let driver_uninstall = super::driver_cleanup::DriverToUninstall {
+                    friendly_name: object.friendly_name().unwrap().to_string(),
+                    original_name: None,
+                    provider: None,
+                    class: None
+                };
+
+                super::driver_cleanup::uninstall_driver(&inf_path, &driver_uninstall, run_info)
+                    .attach_printable_lazy(|| {
+                        format!("failed to uninstall driver for device {}", object.instance_id())
+                    })?
+            }
+
             Ok(())
         }
     }
@@ -181,13 +197,13 @@ impl Dumper for DeviceDumper {
 }
 
 #[derive(Deserialize, Debug)]
-#[serde(deny_unknown_fields)]
 pub struct DeviceToUninstall {
     friendly_name: String,
     device_desc: Option<String>,
     manufacturer: Option<String>,
     hardware_id: Option<String>,
     class_uuid: Option<Uuid>,
+    uninstall_inf: Option<bool>
 }
 
 impl ToUninstall<Device> for DeviceToUninstall {
