@@ -85,36 +85,43 @@ impl ModuleStrategy for DriverCleanupModule {
     ) -> Result<(), UninstallError> {
         let inf_path = Path::new(object.driver_store_location().unwrap())
             .join(object.inf_original_name().unwrap());
-
-        unsafe {
-            let mut reboot: BOOL = false.into();
-            if !DiUninstallDriverW(
-                None,
-                &HSTRING::from(inf_path.as_path()),
-                0,
-                Some(&mut reboot),
-            )
-            .as_bool()
-            {
-                let err = windows::core::Error::from_win32();
-                return Err(err)
-                    .into_report()
-                    .attach_printable_lazy(|| {
-                        format!("failed to uninstall inf: {}", inf_path.display())
-                    })
-                    .into_uninstall_report(to_uninstall);
-            }
-
-            if reboot.as_bool() {
-                run_info.reboot_required = true;
-            }
-
-            Ok(())
-        }
+        uninstall_driver(&inf_path, to_uninstall, run_info)
     }
 
     fn get_dumper(&self) -> Option<&dyn Dumper> {
         Some(&self.driver_dumper)
+    }
+}
+
+pub(crate) fn uninstall_driver(
+    inf_path: &Path,
+    to_uninstall: &DriverToUninstall,
+    run_info: &mut ModuleRunInfo,
+) -> Result<(), UninstallError> {
+    unsafe {
+        let mut reboot: BOOL = false.into();
+        if !DiUninstallDriverW(
+            None,
+            &HSTRING::from(inf_path),
+            0,
+            Some(&mut reboot),
+        )
+        .as_bool()
+        {
+            let err = windows::core::Error::from_win32();
+            return Err(err)
+                .into_report()
+                .attach_printable_lazy(|| {
+                    format!("failed to uninstall inf: {}", inf_path.display())
+                })
+                .into_uninstall_report(to_uninstall);
+        }
+
+        if reboot.as_bool() {
+            run_info.reboot_required = true;
+        }
+
+        Ok(())
     }
 }
 
@@ -155,12 +162,11 @@ impl Dumper for DriverDumper {
 }
 
 #[derive(Deserialize, Debug)]
-#[serde(deny_unknown_fields)]
 pub struct DriverToUninstall {
-    friendly_name: String,
-    original_name: Option<String>,
-    provider: Option<String>,
-    class: Option<Uuid>,
+    pub friendly_name: String,
+    pub original_name: Option<String>,
+    pub provider: Option<String>,
+    pub class: Option<Uuid>,
 }
 
 impl ToUninstall<Driver> for DriverToUninstall {
