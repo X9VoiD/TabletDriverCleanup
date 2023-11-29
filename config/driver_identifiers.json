@@ -210,6 +210,12 @@
     "class": "88bae032-5a81-49f0-bc3d-a4ff138216d6"
   },
   {
+    "friendly_name": "WinUSB (Generic)",
+    "original_name": "winusb_generic_device\\.inf",
+    "provider": "libwdi",
+    "class": "88bae032-5a81-49f0-bc3d-a4ff138216d6"
+  },
+  {
     "friendly_name": "WinUSB (Hawku/Huion)",
     "original_name": "tabletdriver\\.inf",
     "provider": "Graphics ?Tablet",
